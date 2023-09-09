@@ -8,3 +8,21 @@ fun int2str(i0: int): string
 (*
 raise exception for non-strings
 *)
+
+
+(* ****** ****** *)
+
+
+#use "./../assign0.ml"
+;;
+
+(*  *)
+
+let fun int2str(i0: int): string =
+
+
+
+
+
+
+(* ****** ****** *)
