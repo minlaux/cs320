@@ -5,10 +5,6 @@ integer to a string that represents the integer:
 fun int2str(i0: int): string
 *)
 
-(*
-raise exception for non-strings
-*)
-
 
 (* ****** ****** *)
 
