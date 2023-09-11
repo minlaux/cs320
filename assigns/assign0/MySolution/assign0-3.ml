@@ -16,7 +16,7 @@ fun int2str(i0: int): string
 (* converting int to string from an int to char list *)
 
 
-let int2str(i0: int): string =
+let int2str (i0: int): string =
 
 let rec int2char (n : int) (acc : char list) =
 if n < 10 then 
