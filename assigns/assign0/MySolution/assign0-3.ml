@@ -13,25 +13,31 @@ fun int2str(i0: int): string
 ;;
 
 
-(* converting int to string from an int to char list *)
+(* 
+converting integer to string value of the integer 
+base case: one-digit integer; return: string of int
+calls function recursively until reach base case
+builds string from remainders
+*)
 
-let int2str (i0: int): string =
-
-let rec int2char n acc =
-if n < 10 then Char.chr (Char.code '0' + n) :: acc
+let rec int2str (i0: int): string =
+if i0 < 10 then 
+let result = Char.chr (Char.code '0' + i0) in
+String.init 1 (fun i -> result)
 
 else
-let num = n mod 10 in
-let num_char = Char.chr (Char.code '0' + num) in
-int2char (n / 10) (num_char :: acc) in
+let num = i0 mod 10 in
+let num_ch = Char.chr (Char.code '0' + num) in
+let num_str = String.init 1 (fun i -> num_ch) in
+let rest = int2str (i0 / 10) in
+let len_r = String.length rest in
+let len_result = len_r + 1 in
 
-let chars =
-if i0 = 0 then ['0']
-
-else if i0 < 0 then '-' :: int2char (-i0) []
-
-else int2char i0 [] in
-String.init (List.length chars) (fun i -> List.nth chars i)
+String.init len_result (fun i ->
+if i < len_r then 
+String.get rest i
+else
+String.get num_str (i - len_r))
 
 ;;
 
