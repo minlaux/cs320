@@ -14,33 +14,52 @@ In particular, it is expected that str2int(int2str(x)) = x
 ;;
 
 
-(* converting string to int from an int to char list *)
+(*
+helper function for str2int
+calculates base ** exponent
+*)
+
+let rec pow base exponent =
+if exponent = 0 then 1
+
+else if exponent < 0 then failwith "Exponent must be non-negative"
+
+else base * pow base (exponent - 1)
+
+;;
 
 
-let str2int (cs: string): int =
-let is_num c = Char.code '0' <= Char.code c && Char.code c <= Char.code '9' in
+(*
+converts string of an integer to type int 
+contains helper function to retrieve character at each index
+raises to the appropriate power of 10 depending on index number
+*)
 
-let rec convert acc index =
-if index < 0 then acc
+let rec str2int (cs: string): int =
 
-else if is_num cs.[index] then
-let num_value = Char.code cs.[index] - Char.code '0' in
-let power = String.length cs - index - 1 in
-let new_acc = acc + num_value * int_of_float (10.0 ** float_of_int power) in
-convert new_acc (index - 1)
+let rec helper cs i =
+let len = String.length cs in
+if i >= len then 0
 
 else
-failwith "Invalid input: not a valid integer string" in
-let length = String.length cs in
-if length = 0 then
-failwith "Empty input: not a valid integer string"
+let c = String.get cs i in
 
-else if cs.[0] = '-' then - (convert 0 (length - 1))
-
-else if cs.[0] = '+' then convert 0 (length - 1)
+if '0' <= c && c <= '9' then
+let num = Char.code c - Char.code '0' in
+let power = len - i - 1 in
+num * (pow 10 power) + helper cs (i + 1)
 
 else
-convert 0 (length - 1)
+failwith "Invalid character in the string" in
+let len = String.length cs in
+
+if len = 0 then
+failwith "Empty string cannot be converted to int"
+
+else
+helper cs 0
+
+;;
 
 
 (* ****** ****** *)
