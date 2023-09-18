@@ -15,29 +15,13 @@ intrev10.
 *)
 
 
-(* ****** ****** *)
+
 
 
 #use "./../assign1.ml"
 ;;
 
 #use "./../../../classlib/OCaml/MyOcaml.ml"
-;;
-
-
-(*
-helper function for str2int
-calculates base ** exponent
-*)
-
-let rec pow base exponent =
-    if exponent = 0 then 
-        1
-    else if 
-        exponent < 0 then failwith "Exponent must be non-negative"
-    else 
-         base * pow base (exponent - 1)
-
 ;;
 
 
@@ -49,17 +33,7 @@ let rec intrev10(n : int): int =
     if n mod 10 = 0 then
         failwith "n must not be a multiple of 10"
     else
-        
-        let rev =  
-        int1_rforeach n (fun work -> );
-        
+        let rev =
+        int1_rforeach n (fun work -> n * 10)
+        intrev10 rev
 
-let () =
-  let ans = intrev10(12345) in
-  print_int ans;
-  print_newline()
-
-;;
-
-
-(* ****** ****** *)
