@@ -19,11 +19,11 @@ finds index of last character to place first when initialising string
 *)
 
 let stringrev(cs: string): string =
-let len = String.length cs in
-let reversed = String.init len (fun i ->
-let index = len - i - 1 in
-String.get cs index) in
-reversed
+    let len = string_length cs in
+    let reversed = string_init len (fun i ->
+    let index = len - i - 1 in
+    string_get (cs, index)) in
+    reversed
 
 ;;
 

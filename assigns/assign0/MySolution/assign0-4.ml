@@ -36,28 +36,28 @@ raises to the appropriate power of 10 depending on index number
 *)
 
 let rec str2int (cs: string): int =
+    let rec helper cs i =
+        let len = string_length cs in
+        
+        if i >= len then 0
 
-let rec helper cs i =
-let len = String.length cs in
-if i >= len then 0
+        else
+            let c = string_get (cs, i) in
 
-else
-let c = String.get cs i in
+            if '0' <= c && c <= '9' then
+                let num = ord c - ord '0' in
+                let power = len - i - 1 in
+                num * (pow 10 power) + helper cs (i + 1)
 
-if '0' <= c && c <= '9' then
-let num = Char.code c - Char.code '0' in
-let power = len - i - 1 in
-num * (pow 10 power) + helper cs (i + 1)
+            else
+                failwith "Invalid character in the string" in
+                let len = string_length cs in
 
-else
-failwith "Invalid character in the string" in
-let len = String.length cs in
+                if len = 0 then
+                    failwith "Empty string cannot be converted to int"
 
-if len = 0 then
-failwith "Empty string cannot be converted to int"
-
-else
-helper cs 0
+                else
+                    helper cs 0
 
 ;;
 
