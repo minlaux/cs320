@@ -20,5 +20,24 @@ converting ds1 and ds2 to integers can cause overflow.
 
 (* ****** ****** *)
 
+#use "./../../assign0/MySolution/assign0-3.ml"
+;;
+
+#use "./../../assign0/MySolution/assign0-4.ml"
+;;
+
+#use "./../assign1.ml"
+;;
+
+#use "./../../../classlib/OCaml/MyOcaml.ml"
+;;
+
+
+let intrep_add (ds1 : string) (ds2 : string): string =
+    let ds1_int = str2int ds1 in
+    let ds2_int = str2int ds2 in 
+    let sum = ds1_int + ds2_int in 
+    int2str sum
+
 
 (* ****** ****** *)
