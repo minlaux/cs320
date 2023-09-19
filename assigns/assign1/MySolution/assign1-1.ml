@@ -15,7 +15,7 @@ intrev10.
 *)
 
 
-
+(* ****** ****** *)
 
 
 #use "./../assign1.ml"
@@ -26,14 +26,23 @@ intrev10.
 
 
 (*
-
+tail recursively reverses digits of n until n < 10
 *)
 
-let rec intrev10(n : int): int =
+let intrev10(n : int): int =
+    let rec tail n acc =
+        if n < 10 then
+            (acc * 10) + n
+        else
+            let last = n mod 10 in
+            let rest = n / 10 in
+            tail rest ((acc * 10) + last) 
+    in
     if n mod 10 = 0 then
         failwith "n must not be a multiple of 10"
     else
-        let rev =
-        int1_rforeach n (fun work -> n * 10)
-        intrev10 rev
+        tail n 0
+;;
 
+
+(* ****** ****** *)
