@@ -20,12 +20,6 @@ converting ds1 and ds2 to integers can cause overflow.
 
 (* ****** ****** *)
 
-#use "./../../assign0/MySolution/assign0-3.ml"
-;;
-
-#use "./../../assign0/MySolution/assign0-4.ml"
-;;
-
 #use "./../assign1.ml"
 ;;
 
@@ -33,11 +27,24 @@ converting ds1 and ds2 to integers can cause overflow.
 ;;
 
 
+(*
+appends character c to begining of string s
+*)
+
+let combine_str_char (s : string) (c : char): string =
+    let len_s = string_length s in
+    let result = string_init (len_s + 1) (fun i ->
+        if i = 0 then c
+
+        else 
+            string_get (s, (i - 1))) in
+        result
+
+
 let intrep_add (ds1 : string) (ds2 : string): string =
-    let ds1_int = str2int ds1 in
-    let ds2_int = str2int ds2 in 
-    let sum = ds1_int + ds2_int in 
-    int2str sum
+    
+
+
 
 
 (* ****** ****** *)
