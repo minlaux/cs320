@@ -44,10 +44,7 @@ let sort3 (a, b, c) =
             (b, c, a)
     
     else
-        if a <= b then 
-            (c, a, b)
-        else 
-            (c, b, a)
+        (c, b, a)
 
 
 (*
