@@ -31,27 +31,6 @@ fun string_avoid_1324(cs: string): bool
 ;;
 
 
-let string_avoid_1324(cs: string): bool =
-  let len = string_length cs in
-  let rec find_1324_subsequence(i: int) (prevA: char) (prevB: char) (prevC: char) (found1324: bool) =
-    if i >= len then
-      not found1324  (* Return true if no 1324-like subsequence found *)
-    else
-      let c = string_get_at cs i in
-      let prevA' = min c prevA in
-      let prevB' = max c prevB in
-      let prevC' = if prevC < c then c else prevC in
-      if prevA' < prevC' && prevC' < prevB' && c > prevB' then
-        find_1324_subsequence (i + 1) prevA' prevB' prevC' true
-      else
-        find_1324_subsequence (i + 1) prevA' prevB' prevC found1324
-  in
-
-  if len < 4 then
-    true  (* Not enough characters for a 1324-like subsequence *)
-  else
-    find_1324_subsequence 0 (char_of_int 127) (char_of_int 0) (char_of_int 127) false
-;;
 
 
 
