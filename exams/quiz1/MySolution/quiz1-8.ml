@@ -80,8 +80,6 @@ let sort5 (a, b, c, d, e) =
     let (a, c, d, e) = sort4 (a, c, d, e) in
 
     let (b, c, d, e) = sort4 (b, c, d, e) in
-
-    let (a, b, c, d, e) = sort5 (a, b, c, d, e) in
     (a, b, c, d, e)
     
 ;;
