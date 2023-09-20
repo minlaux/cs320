@@ -33,48 +33,36 @@ fun string_avoid_132(cs: string): bool
 ;;
 
 
-(*
-returns true if a string c of length 3 is 132-like
-*)
+let string_avoid_132(cs: string): bool =
+    let len = string_length cs in
 
-let is_132like (s : string): bool =
-    let a = string_get_at s 0 in
-    let b = string_get_at s 1 in
-    let c = string_get_at s 2 in
+    let rec is_132like (i : int): bool =
+        if i >= len - 2 then
+            false
 
-    if a < c && c < b then true
+        else
+            let a = string_get_at cs i in
+            let b = string_get_at cs (i + 1) in
+            let c = string_get_at cs (i + 2) in
 
-    else false
+            if a < c && c < b then
+                true
 
+            else
+                is_132like (i + 1)
+    in
 
-(*
-string_avoid_132 returns true if string cs is 132-avoid
-
-substr creates substring of length 3 from string s 
-starting at index i and checks if the substring is 132-avoid
-*)
-
-let string_avoid_132 (cs : string): bool =
-    if string_length cs < 3 then 
-        true
-            
-    else if string_length cs = 3 && is_132like cs then 
-        false
-
-    else
-        let rec substr (s : string) (i : int): bool = 
-            if i + 2 < string_length s then
-                let sub = string_init 3 (fun i0 -> 
-                string_get_at s (i + i0)) in
-
-                if is_132like sub then false
-                
-                else substr s (i + 1)
-
-            else true
-                
-        in
-        substr cs 0
+    let rec has_132like_sub (i : int): bool =
+        if i >= len - 2 then
+            false
+        
+        else if is_132like i then
+            true
+        
+        else
+            has_132like_sub (i + 1)
+    in
+    not (has_132like_sub 0)
 
 ;;
 

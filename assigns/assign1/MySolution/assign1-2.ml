@@ -23,32 +23,32 @@ string_merge(cs1)(cs2) equals "1234abcde"
 ;;
 
 
-let compare_chars (c0 : char) (c1 : char): char =
-    if ord c0 > ord c1 then c1
-    else c0
-
-
-let string_merge (cs1 : string) (cs2 : string): string =
-    if cs1 = "" then cs2
-
-    else if cs2 = "" then cs1 
-
-    else 
-        let merged = 
-            string_make_fwork (fun fwork -> 
-            string_foreach cs1 (fun c1 -> 
-            string_foreach cs2 (fun c2 ->
-            let m_char = compare_chars c1 c2 in
-            fwork m_char
-            ))) in
-        merged
-    
+let string_merge(cs1: string)(cs2: string): string =
+    let result = string_make_fwork (fun append_char ->
+        let rec merge i1 i2 =
+            if i1 = string_length cs1 && i2 = string_length cs2 then ()
+            
+            else if i1 = string_length cs1 then
+                (append_char (string_get_at cs2 i2); merge i1 (i2 + 1))
+            
+            else if i2 = string_length cs2 then
+                (append_char (string_get_at cs1 i1); merge (i1 + 1) i2)
+            
+            else
+                let char1 = string_get_at cs1 i1 in
+                let char2 = string_get_at cs2 i2 in
+                
+                if char1 < char2 then 
+                    (append_char char1; merge (i1 + 1) i2)
+                
+                else (append_char char2; merge i1 (i2 + 1))
+        in
+        merge 0 0
+    )
+    in
+    result
 
 ;;
-
-let () =
-  let result = string_merge "135" "2468" in
-  print_string result
 
 
 
