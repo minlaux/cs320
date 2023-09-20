@@ -16,8 +16,39 @@
 
 *)
 
-let sort5: int*int*int*int*int -> int*int*int*int*int =
-  (* YOUR CODE *)
+
+
+let sort_below (x, y, z) =
+    if x < y then 
+        if x < z then x 
+        else z 
+    else if y < z then y 
+    else z
+
+
+let sort_above (x, y, z) =
+    if x > y then 
+        if x > z then x 
+        else z 
+    else if y > z then y 
+    else z
+
+
+let sort2 (x, y) =
+  if x < y then (x, y)
+  else (y, x)
+
+
+let sort5 (a, b, c, d, e) =
+    let (n0, n4) = sort2 (a, e) in
+    let (n1, n3) = sort2 (b, d) in
+    let n2 = sort_below (c, n3, n4) in
+    let min = sort_below (n0, n1, n2) in
+    let max = sort_above (n0, n1, n2) in
+    (min, n0, n1, n2, max)
+    
+;;
 
 
 (* ************************************************ *)
+
