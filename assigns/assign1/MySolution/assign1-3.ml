@@ -34,6 +34,9 @@ fun string_avoid_132(cs: string): bool
 
 
 let string_avoid_132(cs: string): bool =
+    if cs = "" then false 
+
+    else
     let len = string_length cs in
 
     let rec is_132like (i : int): bool =

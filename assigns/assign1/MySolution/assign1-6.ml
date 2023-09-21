@@ -24,12 +24,53 @@ fun string_avoid_1324(cs: string): bool
 
 (* ****** ****** *)
 
+
 #use "./../assign1.ml"
 ;;
 
 #use "./../../../classlib/OCaml/MyOcaml.ml"
 ;;
 
+#use "./../MySolution/assign1-3.ml"
+;;
+
+
+let string_avoid_1324(cs: string): bool =
+    if cs = "" then false 
+
+    else
+    let len = string_length cs in
+
+    let rec is_1324like (i : int): bool =
+        if i >= len - 3 then
+            false
+
+        else
+            let a = string_get_at cs i in
+            let b = string_get_at cs (i + 1) in
+            let c = string_get_at cs (i + 2) in
+            let d = string_get_at cs (i + 3) in
+
+            if a < c && c < b && b < d then
+                true
+
+            else
+                is_1324like (i + 1)
+    in
+
+    let rec has_1324like_sub (i : int): bool =
+        if i >= len - 3 then
+            false
+        
+        else if is_1324like i then
+            true
+        
+        else
+            has_1324like_sub (i + 1)
+    in
+    not (has_1324like_sub 0)
+
+;;
 
 
 

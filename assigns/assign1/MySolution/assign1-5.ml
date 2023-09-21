@@ -34,33 +34,42 @@ string_longest_ascend returns "111111".
 let string_longest_ascend(xs: string): string =
     let len = string_length xs in
     
-    let rec find_longest(i: int) (curr: string) (curr_len: int) (max_sub: string) (max_len: int) =
+    let rec find_longest(i: int)(curr: string)(max_sub: string)(max_len: int) =
+        let curr_len = string_length curr in 
+
         if i >= len then
             max_sub
+        
         else
             let c = string_get_at xs i in
             let prev = 
                 if curr_len > 0 then 
                     string_get_at curr (curr_len - 1) 
+                
                 else 
                     ' ' in
         
             if c >= prev then
                 let new_curr = string_snoc curr c in
-                find_longest (i + 1) (new_curr) (curr_len + 1) (new_curr) (max max_len (curr_len + 1))
+                let new_curr_len = string_length new_curr in 
+
+                if new_curr_len > max_len then 
+                    find_longest(i + 1)(new_curr)(new_curr)(new_curr_len)
+                
+                else 
+                    find_longest(i + 1)(new_curr)(max_sub)(max_len)
             
             else
-                find_longest (i + 1) (str c) (1) (max_sub) (max_len)
+                find_longest(i + 1)(str c)(max_sub)(max_len)
     in
+
     if len <= 1 then
         xs
     
     else
-        find_longest (1) (str (string_get_at xs 0)) (1) (str (string_get_at xs 0)) (1)
-
+        find_longest(1)(str (string_get_at xs 0))(str (string_get_at xs 0))(1)
 
 ;;
-
 
 
 (* ****** ****** *)

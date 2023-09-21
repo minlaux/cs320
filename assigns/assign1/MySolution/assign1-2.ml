@@ -24,6 +24,11 @@ string_merge(cs1)(cs2) equals "1234abcde"
 
 
 let string_merge(cs1: string)(cs2: string): string =
+    if cs1 = "" then cs2 
+
+    else if cs2 = "" then cs1 
+
+    else
     let result = string_make_fwork (fun append_char ->
         let rec merge i1 i2 =
             if i1 = string_length cs1 && i2 = string_length cs2 then ()
