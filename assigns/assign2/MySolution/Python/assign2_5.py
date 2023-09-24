@@ -5,15 +5,27 @@
 # MyOCaml.ml
 
 
-"""
-"""
-def fnlist_make_fwork ():
-    
+def fnlist_make_fwork(fwork):
+    result = []
+
+    # Define the work function that appends elements to the result list
+    def work(x0):
+        result.append(x0)
+
+    # Call the provided function (fwork) with the work function as an argument
+    fwork(work)
+
+    # Reverse the result list to match the OCaml version
+    result.reverse()
+
+    return result
+
+
 
 
 # (** transforms the work done by fwork into a list. **)
-let list_make_fwork(fwork: ('x0 -> unit) -> unit): 'x0 list =
-  let res = ref([]) in
-    let work(x0) = (res := (x0 :: !res))
-    in(*let*)(fwork(work); list_reverse(!res) )
-;;
+#let list_make_fwork(fwork: ('x0 -> unit) -> unit): 'x0 list =
+#  let res = ref([]) in
+#    let work(x0) = (res := (x0 :: !res))
+#    in(*let*)(fwork(work); list_reverse(!res) )
+#;;
