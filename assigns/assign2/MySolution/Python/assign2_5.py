@@ -1,3 +1,7 @@
+import sys
+sys.path.append("./../../../../classlib/Python")
+from MyPython import *
+
 # Assign2-5: 20 points
 # Please implement in Python a function
 # of the name fnlist_make_fwork that corresponds
@@ -6,19 +10,16 @@
 
 
 def fnlist_make_fwork(fwork):
-    result = []
+    res = fnlist_nil()
 
-    # Define the work function that appends elements to the result list
     def work(x0):
-        result.append(x0)
+        nonlocal res
+        res = fnlist_cons(x0, res)
 
-    # Call the provided function (fwork) with the work function as an argument
     fwork(work)
 
-    # Reverse the result list to match the OCaml version
-    result.reverse()
+    return fnlist_reverse(res)
 
-    return result
 
 
 
