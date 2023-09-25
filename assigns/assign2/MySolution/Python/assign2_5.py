@@ -10,6 +10,18 @@ from MyPython import *
 
 
 def fnlist_make_fwork(fwork):
+    res = []
+
+    def work(x0):
+        res = fnlist_cons(x0, res)
+
+        fwork(work)
+        fnlist.reversed(res)
+    return res
+
+
+
+    """
     res = fnlist_nil()
 
     def work(x0):
@@ -19,7 +31,7 @@ def fnlist_make_fwork(fwork):
     fwork(work)
 
     return fnlist_reverse(res)
-
+    """
 
 
 
