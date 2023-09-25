@@ -10,29 +10,20 @@ from MyPython import *
 
 
 def fnlist_make_fwork(fwork):
+    """
+    returns list of the characters processed by fwork function
+    """
+
     res = []
 
     def work(x0):
-        res = fnlist_cons(x0, res)
-
-        fwork(work)
-        fnlist.reversed(res)
-    return res
-
-
-
-    """
-    res = fnlist_nil()
-
-    def work(x0):
         nonlocal res
-        res = fnlist_cons(x0, res)
+        res.append(x0)
 
     fwork(work)
+    result = fnlist_reverse(res)
 
-    return fnlist_reverse(res)
-    """
-
+    return result
 
 
 
