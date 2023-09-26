@@ -12,12 +12,24 @@ foldleft_to_iforeach
 
 (* ****** ****** *)
 
-#use "./../assign2.ml"
+#use "./../../assign2.ml"
 ;;
 
-#use "./../../../classlib/OCaml/MyOcaml.ml"
+#use "./../../../../classlib/OCaml/MyOcaml.ml"
 ;;
 
+
+let foldleft_to_iforeach 
+(foldleft: ('xs, 'x0, int) foldleft): ('xs, 'x0) iforeach =
+  
+    match xs with
+    | MyNil -> ()
+    | MyCons() -> 
+    | MySnoc() ->
+    | MyReverse() ->
+    | MyAppend2() ->
+    
+;;
 
 
 

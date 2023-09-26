@@ -19,10 +19,10 @@ string_sepjoin_list(";;")(["11";"22";"33"]) = "11;;22;;33"
 
 (* ****** ****** *)
 
-#use "./../assign2.ml"
+#use "./../../assign2.ml"
 ;;
 
-#use "./../../../classlib/OCaml/MyOcaml.ml"
+#use "./../../../../classlib/OCaml/MyOcaml.ml"
 ;;
 
 
