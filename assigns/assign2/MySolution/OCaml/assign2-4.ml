@@ -33,13 +33,14 @@ let string_sepjoin_list(sep: string)(xs: string list): string =
             let rec loop = function
                 | [] -> ()
                 | [x] -> string_foreach(x)(append_char)
-                | x :: xs' -> string_foreach(x)(fun c ->
-                    append_char(c);
-                    string_foreach(sep)(append_char)
-                );
-            loop xs'
+                | x :: xs' -> 
+                    string_foreach(x)(fun c ->
+                        append_char(c);
+                    );
+                    string_foreach(sep)(append_char);
+                    loop(xs')
             in
-            loop xs
+            loop(xs)
         )
     in
     concat_list(xs)

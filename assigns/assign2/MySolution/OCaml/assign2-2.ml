@@ -43,6 +43,9 @@ let rec mylist_get_at(xs: 'a mylist)(i0: int): 'a =
     if i0 < 0 then
         mylist_subscript_exn ()
     
+    else if i0 >= mylist_length(xs) then
+        mylist_subscript_exn ()
+    
     else
         match xs with
         | MyNil -> mylist_subscript_exn ()
