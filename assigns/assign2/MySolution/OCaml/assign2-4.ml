@@ -26,22 +26,23 @@ string_sepjoin_list(";;")(["11";"22";"33"]) = "11;;22;;33"
 ;;
 
 
+
 let string_sepjoin_list(sep: string)(xs: string list): string =
-    
-    let rec inner(str_list: string list): string = 
-        match str_list with
-        | MyNil -> ""
-        | MyCons(x, MyNil) -> x
-        | MyCons (x, rest) -> string_append(x)(string_append(sep)(inner(rest)))
-        | _ -> ""
-
-    in 
-    inner(xs)
-
+    let concat_list(xs) =
+        string_make_fwork (fun append_char ->
+            let rec loop = function
+                | [] -> ()
+                | [x] -> string_foreach(x)(append_char)
+                | x :: xs' -> string_foreach(x)(fun c ->
+                    append_char(c);
+                    string_foreach(sep)(append_char)
+                );
+            loop xs'
+            in
+            loop xs
+        )
+    in
+    concat_list(xs)
 ;;
 
-(*
-
-list_foreach(str_list)(fun s -> string_append(s)(sep))
-*)
 (* ****** ****** *)

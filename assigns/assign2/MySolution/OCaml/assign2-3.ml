@@ -21,34 +21,14 @@ foldleft_to_iforeach
 
 let foldleft_to_iforeach 
 (foldleft: ('xs, 'x0, int) foldleft): ('xs, 'x0) iforeach =
-    
-    let iforeach (list: 'xs mylist) (work: 'x0 -> unit): unit =
-        
-        let rec fold_fn(acc)(element) =
-            let new_acc = foldleft list acc (fun a b -> b) in
-            work element;
-            
-            match new_acc with
-            | Some acc' -> fold_fn acc' element
-            | None -> ()
-            in
-
-            let () = fold_fn(None)(None) in ()
-        in
-
-        iforeach
-
+    fun xs work ->
+        let _ = foldleft(xs)(0)(fun index x ->
+            work x;
+            index + 1
+        )
+    in
+    ()
 ;;
 
-
-
-(*
- match xs with
-    | MyNil -> ()
-    | MyCons() -> 
-    | MySnoc() ->
-    | MyReverse() ->
-    | MyAppend2() ->
-*)
 
 (* ****** ****** *)

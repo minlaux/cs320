@@ -16,14 +16,14 @@ def fnlist_make_fwork(fwork):
 
     res = []
 
-    def work(x0):
-        nonlocal res
-        res.append(x0)
+    fwork(lambda x: res.append(x))
 
-    fwork(work)
-    result = fnlist_reverse(res)
+    ans = fnlist_nil()
 
-    return result
+    for i in range(len(res) - 1, -1, -1):
+        ans = fnlist_cons(res[i], ans)
+        
+    return ans
 
 
 
