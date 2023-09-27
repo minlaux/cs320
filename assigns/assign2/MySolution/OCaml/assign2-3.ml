@@ -33,7 +33,7 @@ let foldleft_to_iforeach
             | None -> ()
             in
 
-            let () = fold_fn None None in ()
+            let () = fold_fn(None)(None) in ()
         in
 
         iforeach
