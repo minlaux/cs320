@@ -40,39 +40,32 @@ match xs with
 
 
 (*
-returns subsets of a given set list 
-from assign3-2.ml
+helper function to get list length
 *)
 
-let list_subsets (xs: 'a list): 'a list list =
+let rec length_list (xs: 'a list): int =
+  list_foldleft xs 0 (fun acc _ -> acc + 1)
+
+
+let list_nchoose (xs: 'a list)(n0: int): 'a list list =
     let initial = [[]] in
-    let fopr acc x =
-        let mapped = list_map(acc)(fun sub -> x :: sub) in
-        list_append(acc)(mapped)
+    let fopr(acc)(x) =
+    let mapped = list_map(acc)(fun sub -> 
+        x :: sub
+    ) 
     in
-    list_foldleft xs initial fopr
+    list_append(acc)(mapped)
 
+  in
+  let subsets = list_foldleft xs initial fopr in
+  let fil_sub = list_foldleft subsets [] (fun acc subset ->
+      if length_list subset = n0 then 
+      subset :: acc else acc
+  )
+  in
+  list_reverse(fil_sub)
 
-let list_nchoose(xs: 'a list)(n0: int): 'a list list =
+;;
 
-    let len = foreach_to_length(list_foreach(xs)(fun i -> 
-        list_foldleft(xs)
-        ))
-    let map_len = list_map len in 
-
-(*  
-List.map (foreach_to_length list_foreach) subsets
-
-    let combine acc x =
-        let append_x_to_subsets subset =
-            if List.length subset < n then
-                (x :: subset) :: acc
-            else
-                subset :: acc
-        in
-        List.fold_left append_x_to_subsets [] acc
-    in
-    list_foldleft xs [[]] combine
-*) 
 
 (* ****** ****** *)
