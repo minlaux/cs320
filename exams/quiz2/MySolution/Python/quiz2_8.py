@@ -18,14 +18,8 @@
 
 #
 # *)
-"""
-def foreach_to_get_at(foreach): # your implementation below
-    foreach(xs, lambda i:
-        if i < 0 or i > (len(xs) - 1):
-            raiseexpn Subscript
-        else:
-            return xs[i])
-"""
+
+
 class Subscript(Exception):
     pass
 
