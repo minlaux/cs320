@@ -1,14 +1,14 @@
 (* ************************************************ *)
 
 (*
-Q2-3: 4 points
+Q2-2: 3 points
 
-let mystery3 =
-church_three(church_two)(fun x -> x + x)(2)
+let mystery2 = 
+church_three(fun x -> x * x)(2)
 
-What is the value of mystery3 ? Your answer:
+What is the value of mystery2 ? Your answer: 
 *)
 
 (* ************************************************ *)
 
-let mystery3 : int = (* YOUR ANSWER *)
+let mystery2 : int = 256

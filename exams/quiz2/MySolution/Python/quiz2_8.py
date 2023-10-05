@@ -18,6 +18,22 @@
 
 #
 # *)
-
+"""
 def foreach_to_get_at(foreach): # your implementation below
+    foreach(xs, lambda i:
+        if i < 0 or i > (len(xs) - 1):
+            raiseexpn Subscript
+        else:
+            return xs[i])
+"""
+class Subscript(Exception):
+    pass
+
+def foreach_to_get_at(foreach):
+    def get_at(xs, i):
+        if i < 0 or i >= len(xs):
+            raise Subscript
+        else:
+            return foreach(xs, lambda x, idx: x if idx == i else None)
+    return get_at
 
