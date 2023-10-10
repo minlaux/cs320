@@ -20,10 +20,25 @@ let theNatPairs: (int*int) stream = fn () => ...
 #use "./../../../../classlib/OCaml/MyOcaml.ml"
 ;;
 
-let theNatPairs: (int*int) stream = fn () =>
 
+let theNatPairs: (int*int) stream = fun () ->
+    let rec pairs(i)(j) =
+        StrCons((i, j), fun () ->
+            if j = 0 then 
+                pairs(0)(i + 1)
 
+            else
+                pairs(i + 1)(j - 1)
 
+        )
+    in 
+    pairs(0)(0)
 
+;;
+
+(*
+else if j = 0 then 
+    pairs(0)(i + 1)
+*)
 
 (* ****** ****** *)
