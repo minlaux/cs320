@@ -36,9 +36,5 @@ let theNatPairs: (int*int) stream = fun () ->
 
 ;;
 
-(*
-else if j = 0 then 
-    pairs(0)(i + 1)
-*)
 
 (* ****** ****** *)
