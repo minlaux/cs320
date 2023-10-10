@@ -18,18 +18,21 @@ let the_ln2_stream: float stream = fun() -> ...
 //
 *)
 
+
 (* ****** ****** *)
+
 
 #use "./../../../../classlib/OCaml/MyOcaml.ml"
 ;;
 
+
 let the_ln2_stream: float stream = fun() -> 
-    let rec streamer(currNum: float, sum: float, sign: float): float stream = fun() ->
-        let nextNum = sign /. currNum in
-        let summ = sum +. nextNum in
-        strcon_cons(summ, streamer(currNum +. 1.0, summ, -.sign))
+    let rec streamer(curr_num: float)(sum: float)(sign: float): float stream = fun() ->
+        let next_num = sign /. curr_num in
+        let curr_sum = sum +. next_num in
+        StrCons(curr_sum, streamer(curr_num +. 1.0)(curr_sum)(-.sign))
     in 
-        strcon_cons(1.0, streamer(2.0, 1.0, -.1.0))
+        StrCons(1.0, streamer(2.0)(1.0)(-.1.0))
 
 ;;
 
