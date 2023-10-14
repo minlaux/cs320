@@ -24,44 +24,30 @@ from MyPython import *
 # def theNatPairs_cubesum(): # please give your implementation
 #
 
-# let theNatPairs: (int*int) stream = fun () ->
-#     let rec pairs(i)(j) =
-#         StrCons((i, j), fun () ->
-#             if j = 0 then 
-#                 pairs(0)(i + 1)
 
-#             else
-#                 pairs(i + 1)(j - 1)
+# def theNatPairs_cubesum():
+#     def pairs(i, j):
+#         if i <= j:
+#             if i == 0:
+#                 return strcon_cons((i, j), lambda: pairs(i + 1, j))
+#             else:
+#                 return strcon_cons((i, j), lambda: pairs(i + 1, j + 1))
+#         else:
+#             return strcon_cons((i, j), lambda: pairs(j, i))
 
-#         )
-#     in 
-#     pairs(0)(0)
+#     return pairs(0, 0)
 
-# ;;
+def theNatPairs_cubesum():
+    i = 0
+    j = 0
+    while True:
+        if i**3 + j**3 <= (i+1)**3 + j**3:
+            yield (i, j)
+            i += 1
+        else:
+            i = 0
+            j += 1
 
 
-def pairs(i, j):
-    """
-    """
-    strcon_cons((i, j), lambda i:
-    if j = 0:
-        pairs(0, (i + 1))    
-    )
-    return
 
-def theNatPairs_cubesum(limit):
-    """
-    """
-    
-    pairs = []
-    for i in range(limit):
-        for j in range(i, limit):
-            if i**3 + j**3 <= j**3 + i**3:
-                pairs.append((i, j))
-    return pairs
-
-# Example usage:
-# To generate and print the first 10 pairs, you can do the following:
-pairs = theNatPairs_cubesum(10)
-for i, j in pairs:
-    print(f"({i}, {j})")
+# can use generator
