@@ -25,26 +25,26 @@ from MyPython import *
 #
 
 
-# def theNatPairs_cubesum():
-#     def pairs(i, j):
-#         if i <= j:
-#             if i == 0:
-#                 return strcon_cons((i, j), lambda: pairs(i + 1, j))
-#             else:
-#                 return strcon_cons((i, j), lambda: pairs(i + 1, j + 1))
-#         else:
-#             return strcon_cons((i, j), lambda: pairs(j, i))
-
-#     return pairs(0, 0)
-
-
 def theNatPairs_cubesum():
-    i = 0
-    j = 0
-    while True:
-        if (i**3 + j**3 < i**3 + (j + 1)**3) and i <= j:
-            yield (i, j)
-            i += 1
+    def pairs(i, j):
+        if i <= j:
+            if i == 0:
+                return strcon_cons((i, j), lambda: pairs(i + 1, j))
+            else:
+                return strcon_cons((i, j), lambda: pairs(i + 1, j + 1))
         else:
-            i = 0
-            j += 1
+            return strcon_cons((i, j), lambda: pairs(j, i))
+
+    return pairs(0, 0)
+
+
+# def theNatPairs_cubesum():
+#     i = 0
+#     j = 0
+#     while True:
+#         if (i**3 + j**3 < i**3 + (j + 1)**3) and i <= j:
+#             yield (i, j)
+#             i += 1
+#         else:
+#             i = 0
+#             j += 1
