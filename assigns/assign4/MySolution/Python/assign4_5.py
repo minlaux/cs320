@@ -46,70 +46,72 @@ from MyPython import *
 #
 
 
-def string_length(str):
-    return len(str)
+def string_get_at(cs, i0):
+    """
+        gets character at index i0 in string cs
+    """
+    return cs[i0]
 
 
-def string_tabulate(length, fun):
-    return strcon_cons(length, fun)
+def string_length(cs):
+    """
+        returns length of string cs
+    """
+    return len(cs)
+
+
+def string_foreach(cs, work):
+    """
+        for each character of string cs apply the work function
+    """
+    lambda_i0 = lambda i0: work(string_get_at(cs, i0))
+    return int1_foreach(string_length(cs), lambda_i0)
+
+
+string_tabulate = lambda n, f: ''.join(f(i) for i in range(n))
 
 
 def string_fset_at(cs, i0, c0):
     """
-        
+        cs: string
+        i0: int
+        c0: char
     """
-    
-    return string_tabulate(string_length(cs), lambda i: string_get_at(cs, i) if i != i0 else c0)
+    lambda_i = lambda i: string_get_at(cs, i) if i != i0 else c0
+    return string_tabulate(string_length(cs), lambda_i)
+
+
+def list_make_fwork(fwork):
+    res = []
+
+    def work(x0):
+        res.append(x0)
+
+    fwork(work)
+    return list(reversed(res))
+
 
 
 alphabet = string_tabulate(26, lambda i: chr(ord('a') + i))
 
-def list_of_buddies(word: String):
+
+def list_of_buddies(word):
     """
+    word: string
     """
+
     n0 = string_length(word)
-    list_make_fwork(lambda work: int1_foreach(n0)(lambda i0: ))
 
+    def lambda_work(work):
+        def lambda_i0(i0):
+            c0 = string_get_at(word, i0)
 
-# def string_fset_at(cs, i0, c0):
-#     return "".join(c if i != i0 else c0 for i, c in enumerate(cs))
+            def lambda_c1(c1):
+                if c1 != c0:
+                    work(string_fset_at(word, i0, c1))
 
-# def list_make_fwork(fwork):
-#     return fwork()
+            string_foreach(alphabet, lambda_c1)
 
+        int1_foreach(n0, lambda_i0)
 
-# def string_foreach(s, func):
-#     for c in s:
-#         func(c)
-
-# def string_get_at(cs, i):
-#     return cs[i]
-
-# def string_length(cs):
-#     return len(cs)
-
-# def chr(i):
-#     return chr(i)
-
-# def ord(c):
-#     return ord(c)
-
-# alphabet = "".join(chr(ord('a') + i) for i in range(26))
-
-# def list_of_buddies(word):
-#     n0 = string_length(word)
-#     results = []
-    
-#     def work_callback(new_word):
-#         results.append(new_word)
-    
-#     list_make_fwork(lambda: int1_foreach(n0, lambda i0: 
-#         c0 = string_get_at(word, i0)
-#         string_foreach(alphabet, lambda c1:
-#             if c1 != c0:
-#                 work_callback(string_fset_at(word, i0, c1))
-#         )
-#     ))
-    
-#     return results
-
+    return list_make_fwork(lambda_work)
