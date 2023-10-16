@@ -37,17 +37,14 @@ from MyPython import *
 
 #     return pairs(0, 0)
 
+
 def theNatPairs_cubesum():
     i = 0
     j = 0
     while True:
-        if i**3 + j**3 <= (i+1)**3 + j**3:
+        if (i**3 + j**3 < i**3 + (j + 1)**3) and i <= j:
             yield (i, j)
             i += 1
         else:
             i = 0
             j += 1
-
-
-
-# can use generator
