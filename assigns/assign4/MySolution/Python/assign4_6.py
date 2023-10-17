@@ -37,13 +37,37 @@ from MyPython import *
 
 
 def theNatPairs_cubesum():
-    i, j = 0, 0
+    i = 0
+    j = 0
 
     while True:
-        if i <= j:
-            if i**3 + j**3 < (i+1)**3 + j**3:
+        if i == j:
+            if i**3 + j**3 < (j + 1)**3:
                 yield (i, j)
-            i += 1
+                i = 0
+                j += 1
+
+        elif i < j:
+            if i**3 + j**3 < (i + 1)**3 + j**3:
+                yield (i, j)
+                i += 1
+
         else:
-            i = 0
-            j += 1
+            yield (j, i)
+            i += 1
+
+
+
+# (0, 0) - Cube sum: 0 + 0 = 0
+# (0, 1) - Cube sum: 0 + 1 = 1
+# (1, 0) - Cube sum: 1 + 0 = 1 xxx
+# (1, 1) - Cube sum: 1 + 1 = 2
+# (0, 2) - Cube sum: 0 + 8 = 8
+# (2, 0) - Cube sum: 8 + 0 = 8 xxx
+# (1, 2) - Cube sum: 1 + 8 = 9
+# (2, 1) - Cube sum: 8 + 1 = 9 xxx
+# (2, 2) - Cube sum: 8 + 8 = 16
+# (0, 3) - Cube sum: 0 + 27 = 27
+# (3, 0) - Cube sum: 27 + 0 = 27 xxx
+# (1, 3) - Cube sum: 1 + 27 = 28
+# (3, 1) - Cube sum: 27 + 1 = 28 xxx

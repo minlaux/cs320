@@ -22,4 +22,11 @@ let list_permute(xs: 'a list): 'a list stream
 
 
 let list_permute(xs: 'a list): 'a list stream =
-
+    match xs with
+    | [] -> StrCons ([], (fun () -> StrNil))
+    | x :: rest -> StrCons (list_foreach(xs)(fun i ->
+        let rem1 = StrCons( :: i) 
+        let rem2 = StrCons(i + 1 :: )
+        list_foreach(list_permute(remain))(stream_append(rem1)(rem2)))
+    )
+;;

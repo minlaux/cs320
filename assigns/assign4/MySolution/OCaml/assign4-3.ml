@@ -26,47 +26,32 @@ gtree_streamize_bfs(xs: 'a gtree): 'a stream
 ;;
 
 
-(*
-depth-first search
-*)
 
+(* Depth-first search *)
 let rec gtree_streamize_dfs (xs: 'a gtree): 'a stream =
-    let rec dfs_rec(nodes) =
-        match nodes with
-        | [] -> StrNil
-        | (Node (data, children)) :: rest ->
-            let next_children = fun () -> 
-                dfs_rec (children @ rest) in
-            StrCons (data, next_children)
-        | Leaf :: rest -> dfs_rec rest
-    in
-        fun () -> dfs_rec [xs]
+  let rec dfs_rec nodes =
+    match nodes with
+    | [] -> StrNil
+    | GTnil :: rest -> dfs_rec rest
+    | GTcons (data, children) :: rest ->
+      let next_children = fun () -> dfs_rec (children @ rest) in
+      StrCons (data, next_children)
+  in
+  fun () -> dfs_rec [xs]
 
 
+(* Breadth-first search (level-order) *)
+let rec gtree_streamize_bfs (xs: 'a gtree): 'a stream =
+  let rec bfs_queue queue =
+    match queue with
+    | [] -> StrNil
+    | GTnil :: rest -> bfs_queue rest
+    | GTcons (data, children) :: rest ->
+      let next_nodes = List.map (fun x -> x) children in
+      StrCons(data, fun () -> bfs_queue (rest @ next_nodes))
+  in
+  fun () -> bfs_queue [xs]
 
-(*
-let rec gtree_bfs(nxs: node list)(fchildren : node -> node list): node stream = fun () -> 
-	(match nxs with
-	| [] -> StrNil
-	| nx1 :: nxs -> StrCons(nx1, gtree_bfs(nxs @ children(nx1))(fchildren)))
-*)
-
-(* 
-breadth-first search
-level-order
-*)
-
-let rec gtree_streamize_bfs(xs: 'a gtree): 'a stream =
-    let rec bfs_queue queue =
-        match queue with
-        | [] -> Nil
-        | Node (data, children) :: rest ->
-            StrCons (data, bfs_queue (rest @ children))
-    in
-    match xs with
-    | Node (root, children) ->
-    StrCons (root, bfs_queue children)
-
-
+;;
 
 (* ****** ****** *)
