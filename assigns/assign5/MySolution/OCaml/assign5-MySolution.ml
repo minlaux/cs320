@@ -41,22 +41,22 @@ let rec parse_expr(cs: char list): expr option =
     | '(' :: x :: ')' ->
         match parse_int(x) with 
         | Some i -> Some (Int(i))
-        | None -> None
+        | _ -> None
     | '(' :: 'a' :: 'd' :: 'd' :: x :: xs ->
         match parse_int(x) with 
         | Some i -> 
             match parse_expr(trim(xs)) with
             | Some r -> Some (Add i)
-            | None -> None 
-        | None -> None
+            | _ -> None 
+        | _ -> None
     | '(' :: 'm' :: 'u' :: 'l' :: x :: xs ->
         match parse_int(x) with 
         | Some i -> 
             match parse_expr(trim(xs)) with
             | Some r -> Some (Mul i)
-            | None -> None 
-        | None -> None
-    | None -> None
+            | _ -> None 
+        | _ -> None
+    | _ -> None
 
 
 
