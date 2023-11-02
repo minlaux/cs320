@@ -25,50 +25,38 @@
 ;;
 
 
-(*
-main parse function
-takes input string
-returns expr option of input string
-*)
-
 let parse (s: string): expr option = 
-    let cs = string_listize(s) in 
-    parse_expr(cs)
-
-
-(*
-parse Int function
-takes input char 
-returns int option of input char
-*)
+    let r = (string_listize(s)) in 
+    parse_expr(r)
 
 let parse_int(c: char): int option =
-    let t = digit_of_char(c) in 
+    let t = int_of_char(c) - 48 in 
     if (0 <= t) && (t <= 9) then 
         Some (Int t) 
     else 
         None
 
-
-(*
-parse expr function
-takes input char list 
-returns expr option of input char list
-*)
-
-let parse_expr(cs: char List): expr option = 
-    match cs with 
-    | x :: [] ->                            
+let rec parse_expr(cs: char list): expr option = 
+    match cs with
+    | '(' :: x :: ')' ->
         match parse_int(x) with 
         | Some i -> Some (Int(i))
-        | None -> None                      
-    | x :: '+' :: xs ->                     
+        | None -> None
+    | '(' :: 'a' :: 'd' :: 'd' :: x :: xs ->
         match parse_int(x) with 
-        | Some i ->                         
-            match parse_expr(xs) with 
-            | Some r -> Some(Add(i, r))
-            | None -> None                  
-        | None -> None                      
+        | Some i -> 
+            match parse_expr(trim(xs)) with
+            | Some r -> Some (Add i)
+            | None -> None 
+        | None -> None
+    | '(' :: 'm' :: 'u' :: 'l' :: x :: xs ->
+        match parse_int(x) with 
+        | Some i -> 
+            match parse_expr(trim(xs)) with
+            | Some r -> Some (Mul i)
+            | None -> None 
+        | None -> None
+    | None -> None
 
 
 
