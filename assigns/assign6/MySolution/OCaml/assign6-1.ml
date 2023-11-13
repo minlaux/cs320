@@ -34,94 +34,46 @@ parse "((mul 1 2)" = None
 ;;
 
 
+let string_of_int(x: int): string = 
+    str(char_of_digit(x))
+
+
 let string_listize (s : string) : char list =
     list_make_fwork(fun work -> string_foreach s work)
 
 
-let rec trim(cs) =
-  match cs with
-  | [] -> cs
-  | '\n' :: cs -> trim cs
-  | '\t' :: cs -> trim cs
-  | '\r' :: cs -> trim cs
-  | ' ' :: cs -> trim cs
-  | _ -> cs
+let rec sexpr() = 
+    (let* x = natural in 
+     let* _ = whitespace in 
+     let* _ = char '+' in 
+     let* _ = whitespace in 
+     let* y = sexpr() in
+        pure (SAdd [SInt x; y]))
+    <|>  
+    (let* x = natural in 
+     let* _ = whitespace in 
+     let* _ = char '*' in 
+     let* _ = whitespace in 
+     let* y = sexpr() in
+        pure (SMul [SInt x; y]))
+    <|> 
+    let* x = natural in
+    (if (0 <= x) && (x <= 9) then pure (SInt x) else fail  )
 
 
-let rec parse_digits(cs: char list) =
-    match cs with
-    | [] -> ([], cs)
-    | c :: cs ->
-        let x = ord(c) - ord('0') in 
-        if 0 <= x && x <= 9 then
-            let xs, cs = parse_digits cs in
-            (x :: xs, cs) 
-        else 
-            ([], c :: cs)
-    
-
-let parse_int(cs: char list): sexpr option =
-    let xs, cs = parse_digits(cs) in
-    match xs with
-    | [] -> None
-    | _ ->
-        let n = list_foldleft(xs)(0)(fun acc x -> acc * 10 + x) in
-        Some (SInt n, cs)
+let rec sexpr_to_string(e: sexpr): string =
+    match e with
+    | SInt x -> string_of_int(x)
+    | SAdd [t1; t2] -> 
+        let first = string_append(sexpr_to_string(t1))("+") in
+        ( string_append(first)(sexpr_to_string(t2)))
+    | SMul [t1; t2] -> 
+        let first = string_append(sexpr_to_string(t1))("*") in
+        ( string_append(first)(sexpr_to_string(t2)))
+    | _ -> ""
 
 
-let parse_str(s)(cs) =
-    let cs0 = string_listize(s) in
-
-    let rec loop(cs)(cs0) =
-        match cs, cs0 with
-        | c :: cs, c0 :: cs0 -> 
-            if c = c0 then 
-                loop cs cs0
-            else 
-                None
-        | _, [] -> Some cs
-        | _ -> None
-    in loop(cs)(cs0)
-
-
-let attempt(ps)(cs) =
-    list_foldleft(ps)(None)(fun acc p ->
-        match acc with
-        | Some _ -> acc
-        | None -> p cs)
-
-
-let rec sexpr_parse(s: string): sexpr option = 
-    let cs = string_listize(s) in
-    attempt [parse_int; parse_add; parse_mul] cs 
-
-and parse_exprs(cs) = 
-    match sexpr_parse cs with 
-    | None -> None 
-    | Some (e, cs) ->
-        match parse_exprs(trim cs) with 
-        | Some (es, cs) -> Some (e :: es, cs)
-        | None -> Some ([e], cs)
-
-and parse_add(cs) =
-    match parse_str("(add")(cs) with
-    | None -> None
-    | Some cs ->
-        match parse_exprs (trim cs) with
-        | Some (es, ')' :: cs) -> Some (SAdd es, cs)
-        | _ -> None 
-
-and parse_mul(cs) =
-    match parse_str("(mul")(cs) with
-    | None -> None
-    | Some cs ->
-        match parse_exprs(trim cs) with
-        | Some (es, ')' :: cs) -> Some (SMul es, cs)
-        | _ -> None
-
-
-let parse(s: string): sexpr option =    
-    let cs = string_listize(s) in 
-    match cs with 
-    | Some (e, []) -> Some e
+let sexpr_parse(s: string): sexpr option =
+    match string_parse(sexpr()) s with
+    | Some (result, _) -> Some result
     | _ -> None
