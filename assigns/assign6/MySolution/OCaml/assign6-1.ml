@@ -30,7 +30,7 @@ parse "((mul 1 2)" = None
 #use "./../../assign6.ml"
 ;;
 
-#use "./../../../../classlib/OCaml/MyOcaml.ml"
+#use "./../../../../classlib/OCaml/MyOCaml.ml"
 ;;
 
 
