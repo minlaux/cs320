@@ -59,10 +59,10 @@ let rec sexpr_to_string(e: sexpr): string =
   match e with
   | SInt x -> string_of_int x
   | SAdd exprs -> 
-        let a = foreach_to_map_list (list_foreach exprs sexpr_to_string) in 
+        let a = foreach_to_map_list list_foreach exprs sexpr_to_string in 
         string_append "(add" (string_append (concat a) ")")
   | SMul exprs -> 
-        let a = foreach_to_map_list (list_foreach exprs sexpr_to_string) in 
+        let a = foreach_to_map_list list_foreach exprs sexpr_to_string in 
         string_append "(mul" (string_append (concat a) ")")
 
 let rec p_sexpr() =
