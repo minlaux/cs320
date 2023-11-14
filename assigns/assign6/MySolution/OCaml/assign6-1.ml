@@ -42,37 +42,31 @@ returns string representation of int value
 let string_of_int(x: int): string = 
     str(char_of_digit x)
 
-
 (*
 acts as String.concat " " sl 
 concatenates string list with whitespace " " as dividors
 *)
-let rec concat(sl: string list) =
+let rec concat sl =
     match sl with
     | [] -> ""
     | [x] -> string_append " " x
-    | hd:: tl -> string_append(string_append " " hd)(concat tl)
+    | hd :: tl -> string_append(string_append " " hd)(concat tl)
 
 
 (* MAIN FUNCTIONS *)
 
 let rec sexpr_to_string(e: sexpr): string =
   match e with
-  | SInt x -> string_of_int(x)
+  | SInt x -> string_of_int x
   | SAdd exprs -> 
-        let a = foreach_to_map_list(list_foreach exprs sexpr_to_string) in 
-        string_append "(add" string_append(concat a) ")"
+        let a = foreach_to_map_list (list_foreach exprs sexpr_to_string) in 
+        string_append "(add" (string_append (concat a) ")")
   | SMul exprs -> 
-        let a = foreach_to_map_list(list_foreach exprs sexpr_to_string) in 
-        string_append "(mul" string_append(concat a) ")"
-  
+        let a = foreach_to_map_list (list_foreach exprs sexpr_to_string) in 
+        string_append "(mul" (string_append (concat a) ")")
 
-let rec sexpr() =
-    sint()
-    <|>
-    sadd()
-    <|>
-    smul()
+let rec p_sexpr() =
+    sint() <|> sadd() <|> smul()
 
     and sint() =
         let* x = natural in 
@@ -80,18 +74,17 @@ let rec sexpr() =
 
     and sadd() =
         let* _ = keyword "(add" in 
-        let* a = many1' sexpr in 
+        let* a = many1' p_sexpr in 
         let* _ = keyword ")" in 
         pure (SAdd a)
 
     and smul() =
         let* _ = keyword "(mul" in 
-        let* a = many1' sexpr in 
+        let* a = many1' p_sexpr in 
         let* _ = keyword ")" in 
         pure (SMul a)
 
-
 let sexpr_parse(s: string): sexpr option =
-    match string_parse (sexpr()) s with
+    match string_parse (p_sexpr()) s with
     | Some (x, []) -> Some x
     | _ -> None
