@@ -34,46 +34,64 @@ parse "((mul 1 2)" = None
 ;;
 
 
+(* HELPER FUNCTIONS*)
+
+(*
+returns string representation of int value
+*)
 let string_of_int(x: int): string = 
-    str(char_of_digit(x))
+    str(char_of_digit x)
 
 
-let string_listize (s : string) : char list =
-    list_make_fwork(fun work -> string_foreach s work)
+(*
+acts as String.concat " " sl 
+concatenates string list with whitespace " " as dividors
+*)
+let rec concat(sl: string list) =
+    match sl with
+    | [] -> ""
+    | [x] -> string_append " " x
+    | hd:: tl -> string_append(string_append " " hd)(concat tl)
 
 
-let rec sexpr() = 
-    (let* x = natural in 
-     let* _ = whitespace in 
-     let* _ = char '+' in 
-     let* _ = whitespace in 
-     let* y = sexpr() in
-        pure (SAdd [SInt x; y]))
-    <|>  
-    (let* x = natural in 
-     let* _ = whitespace in 
-     let* _ = char '*' in 
-     let* _ = whitespace in 
-     let* y = sexpr() in
-        pure (SMul [SInt x; y]))
-    <|> 
-    let* x = natural in
-    (if (0 <= x) && (x <= 9) then pure (SInt x) else fail  )
-
+(* MAIN FUNCTIONS *)
 
 let rec sexpr_to_string(e: sexpr): string =
-    match e with
-    | SInt x -> string_of_int(x)
-    | SAdd [t1; t2] -> 
-        let first = string_append(sexpr_to_string(t1))("+") in
-        ( string_append(first)(sexpr_to_string(t2)))
-    | SMul [t1; t2] -> 
-        let first = string_append(sexpr_to_string(t1))("*") in
-        ( string_append(first)(sexpr_to_string(t2)))
-    | _ -> ""
+  match e with
+  | SInt x -> string_of_int(x)
+  | SAdd exprs -> 
+        let a = foreach_to_map_list(list_foreach exprs sexpr_to_string) in 
+        string_append "(add" string_append(concat a) ")"
+  | SMul exprs -> 
+        let a = foreach_to_map_list(list_foreach exprs sexpr_to_string) in 
+        string_append "(mul" string_append(concat a) ")"
+  
+
+let rec sexpr() =
+    sint()
+    <|>
+    sadd()
+    <|>
+    smul()
+
+    and sint() =
+        let* x = natural in 
+        pure (SInt x) << whitespaces
+
+    and sadd() =
+        let* _ = keyword "(add" in 
+        let* a = many1' sexpr in 
+        let* _ = keyword ")" in 
+        pure (SAdd a)
+
+    and smul() =
+        let* _ = keyword "(mul" in 
+        let* a = many1' sexpr in 
+        let* _ = keyword ")" in 
+        pure (SMul a)
 
 
 let sexpr_parse(s: string): sexpr option =
-    match string_parse(sexpr()) s with
-    | Some (result, _) -> Some result
+    match string_parse (sexpr()) s with
+    | Some (x, []) -> Some x
     | _ -> None
