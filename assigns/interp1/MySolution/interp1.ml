@@ -1,5 +1,3 @@
-#use "./../../../classlib/OCaml/MyOCaml.ml";;
-
 (*
 
 Please implement the interp function following the
@@ -10,6 +8,21 @@ Notes:
    or ones you implement yourself.
 2. You may NOT use OCaml standard library functions directly.
 
+let interp (s : string) : string list option = (* YOUR CODE *)
 *)
 
-let interp (s : string) : string list option = (* YOUR CODE *)
+
+(* ****** ****** *)
+
+
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
+
+
+let interp(s: string): string list option = 
+
+
+
+
+
+(* ****** ****** *)
