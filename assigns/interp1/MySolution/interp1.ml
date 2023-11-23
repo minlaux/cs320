@@ -91,9 +91,26 @@ let rec eval_step(g: prog)(m: mem): prog =
    | And (B true, B v2)
 
 
+let rec parse_com(com_str: string): prog =
+   match com_str with
+   | "Push" :: rest -> parse_const (List.hd rest)
+   | "Pop" :: _ -> Pop
+   | "Trace" :: _ -> Trace
+   | "Add" :: _ -> Add
+   | "Sub" :: _ -> Sub
+   | "Mul" :: _ -> Mul
+   | "Div" :: _ -> Div
+   | "And" :: _ -> And
+   | "Or" :: _ -> Or
+   | "Not" :: _ -> Not
+   | "Lt" :: _ -> Lt
+   | "Gt" :: _ -> Gt
+   | _ -> failwith "Invalid command"
+
+
 let rec to_string(g: prog): string =
    match g with 
-   | And ([]) -> ""
+   | And -> ""
    | And (hd :: tl) ->
 
 
