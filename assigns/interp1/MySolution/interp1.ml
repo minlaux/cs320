@@ -18,6 +18,14 @@ let interp (s : string) : string list option = (* YOUR CODE *)
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 (*
+(*
+helper functions
+*)
+
+let pure_a(a: 'a) =
+   fun xs -> Some [a]
+
+
 (* 
 grammar: constants 
 
@@ -27,6 +35,7 @@ grammar: constants
 ⟨bool⟩ ::= True | False
 ⟨const⟩ ::= ⟨int⟩ | ⟨bool⟩ | Unit
 *)
+
 
 (* 
 grammar: programs 
@@ -38,6 +47,7 @@ grammar: programs
          | Lt | Gt
 ⟨coms⟩ ::= ϵ | ⟨com⟩; ⟨coms⟩
 *)
+
 
 type prog =
    | Push of prog * const
@@ -60,12 +70,12 @@ type const =
    | U of unit
 
 
-type mem = (string * int) list
+type mem = string list
 
 
 let rec fetch(s: string)(m: mem): int =
    match m with
-   | (x, v) :: xs -> 
+   | x :: xs -> 
       if s = x then 
          v 
       else 
@@ -74,22 +84,17 @@ let rec fetch(s: string)(m: mem): int =
 
 let integer: int parser =
    (let* _ = char '-' in
-   let* x = natural in pure(-x))
+   let* x = natural in pure_a(-x))
    <|>
-   (let* x = natural in pure x)
+   (let* x = natural in pure_a x)
 
 
 let bool: prog parser =
    (let* x = "True" in 
-      pure(B true))
+      pure_a(B true))
    <|>
    (let* x = "False" in 
-      pure (B false))
-
-let parse_const: const parser =
-
-let rec to_string x: string = 
-
+      pure_a(B false))
 
 
 let rec eval_step(g: prog)(m: mem): prog =
@@ -97,132 +102,170 @@ let rec eval_step(g: prog)(m: mem): prog =
    | Push c -> Some list_concat[[c]; mem]
    | Pop -> 
    | Trace -> 
-   | And (B false, _) -> Some (B false)
-   | And (B true, B v2) -> Some (B v2)
-   | And (B true, e2) -> 
-      (match eval_step e1 with 
-      | None -> None 
-      | Some e1' -> (And (e1', e2)))
 
-
-let rec parse_com(com_str: string): prog =
-   match com_str with
-   | "Push" :: rest -> parse_const (List.hd rest)
-   | "Pop" :: _ -> Pop
-   | "Trace" :: _ -> Trace
-   | "Add" :: _ -> Add
-   | "Sub" :: _ -> Sub
-   | "Mul" :: _ -> Mul
-   | "Div" :: _ -> Div
-   | "And" :: _ -> And
-   | "Or" :: _ -> Or
-   | "Not" :: _ -> Not
-   | "Lt" :: _ -> Lt
-   | "Gt" :: _ -> Gt
-   | _ -> failwith "Invalid command"
+   | Not -> 
+      match g with 
+   | i :: j :: m ->
+      match g with 
+      | Add -> 
+         let v = fetch i m in 
+         let e = fetch j m in 
+         Push (v + e)
+      | Sub -> 
+         let v = fetch i m in 
+         let e = fetch j m in 
+         Push (v - e)
+      | Mul ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         Push (v * e)
+      | Div ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         Push (v / e)
+      | And ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         if v and e then 
+            Push True 
+         else 
+            Push False
+      | Or ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         if v or e then 
+            Push True 
+         else 
+            Push False 
+      | Lt ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         if v < e then 
+            Push True 
+         else 
+            Push False 
+      | Gt ->
+         let v = fetch i m in 
+         let e = fetch j m in 
+         if v > e then 
+            Push True 
+         else 
+            Push False
 
 
 let rec to_string(g: prog): string =
    match g with 
    | Int x -> str(char_of_digit x)
-   | B True -> "True"
-   | B False -> "False"
-   | U Unit -> "Unit"
+   | B true -> "True"
+   | B false -> "False"
+   | U unit -> "Unit"
    | _ -> "Panic" 
 
 
 let interp(s: string): string list option = 
 
-*)
-
 
 (* ****** ****** *)
 
 
-type const =
-  | CInt of int
-  | CBool of bool
+De Morgan’s Law:
 
-type stack_op =
+Push False;
+Push False;
+And;
+Not;
+Trace;
+Push False;
+Not;
+Push False;
+Not;
+Or;
+Trace;
+
+Result: Some ["True"; "True"]
+*)
+
+type mem = (string * int) list
+
+type prog =
   | Push of const
   | Pop
   | Trace
-  | Add | Sub | Mul | Div
-  | And | Or | Not
-  | Lt | Gt
+  | Add of const * const
+  | Sub of const * const
+  | Mul of const * const
+  | Div of const * const
+  | And of const * const
+  | Or of const * const
+  | Not of const
+  | Lt of const * const
+  | Gt of const * const
 
-type program = stack_op list
-
-let rec parse_const (const_str : string) : const =
-  match const_str with
-  | "True" -> CBool true
-  | "False" -> CBool false
-  | _ ->
-    if String.length const_str > 0 && const_str.[0] = '-'
-    then CInt (-int_of_string (String.sub const_str 1 (String.length const_str - 1)))
-    else CInt (int_of_string const_str)
-
-and parse_com (com_str : string) : stack_op =
-  let tokens = String.split_on_char ' ' com_str in
-  match tokens with
-  | "Push" :: rest -> Push (parse_const (String.concat " " rest))
-  | "Pop" :: _ -> Pop
-  | "Trace" :: _ -> Trace
-  | "Add" :: _ -> Add
-  | "Sub" :: _ -> Sub
-  | "Mul" :: _ -> Mul
-  | "Div" :: _ -> Div
-  | "And" :: _ -> And
-  | "Or" :: _ -> Or
-  | "Not" :: _ -> Not
-  | "Lt" :: _ -> Lt
-  | "Gt" :: _ -> Gt
-  | _ -> failwith "Invalid command"
+and const =
+  | Int of int
+  | B of bool
+  | U of unit
 
 
-and parse_coms (coms_str : string list) : program =
-  List.map parse_com coms_str
+let rec fetch (s : string) (m : mem) : int option =
+  match m with
+  | (x, v) :: xs ->
+    if s = x then
+      Some v
+    else
+      fetch s xs
+  | _ -> None
 
-let interpret_program (program : program) : const list option =
-  let rec eval (stack : const list) (ops : stack_op list) : const list option =
-    match ops with
-    | [] -> Some stack
-    | op :: rest ->
-      match op with
-      | Push c -> eval (c :: stack) rest
-      | Pop -> (match stack with _ :: tl -> eval tl rest | _ -> None)
-      | Trace ->
-        (List.map (function CBool b -> string_of_bool b | CInt i -> string_of_int i) stack |> String.concat " " |> print_endline;
-         eval stack rest)
-      | Add | Sub | Mul | Div | And | Or | Not | Lt | Gt ->
-        (* Handle binary operations *)
-        let binary_op (f : int -> int -> int) : const list option =
-          match stack with
-          | CInt a :: CInt b :: tl -> eval (CInt (f b a) :: tl) rest
-          | _ -> None
-        in
-        (match op with
-         | Add -> binary_op (+)
-         | Sub -> binary_op (-)
-         | Mul -> binary_op ( * )
-         | Div -> binary_op (/)
-         | And -> binary_op (fun a b -> if a <> 0 && b <> 0 then 1 else 0)
-         | Or -> binary_op (fun a b -> if a <> 0 || b <> 0 then 1 else 0)
-         | Not -> (match stack with CInt a :: tl -> eval (CInt (if a = 0 then 1 else 0) :: tl) rest | _ -> None)
-         | Lt -> binary_op (fun a b -> if b < a then 1 else 0)
-         | Gt -> binary_op (fun a b -> if b > a then 1 else 0)
-         | _ -> None)
-  in
-  eval [] program
+let integer : const parser =
+  (let* _ = char '-' in
+   let* x = natural in pure (Int (-x)))
+  <|>
+  (let* x = natural in pure (Int x))
 
-let interp (program_str : string) : string list option =
-  let coms_str = String.split_on_char ';' program_str in
-  let program = parse_coms coms_str in
-  match interpret_program program with
-  | Some result -> Some (List.map (function CBool b -> string_of_bool b | CInt i -> string_of_int i) result)
-  | None -> None
+  
+let boolean: const parser =
+   (let* _ = keyword "True" in pure (B true))
+   <|>
+   (let* _ = keyword "False" in pure (B false))
 
-let () =
-  match interp "Push False; Push False; And; Not; Trace; Push False; Not; Push False; Not; Or; Trace;" with
-  | Some result -> List.iter print_endline result
-  | None -> print_endline "Error in program"
+  
+let const: const parser =
+  integer <|> boolean
+
+let rec prog_step (x: prog): prog option =
+  match x with
+  | And (B false, _) -> Some (B false)
+  | And (B true, B v2) -> Some (B v2)
+  | And (B true, e2) -> (
+      match prog_step e2 with
+      | Some e2' -> Some (And (B true, e2'))
+      | _ -> None
+    )                 
+  | And (Int _, _) -> None
+  | And (_, Int _) -> None
+  | And (e1, e2) -> (
+      match prog_step e1 with
+      | None -> None
+      | Some e1' -> Some (And (e1', e2))
+    )
+  | Or (B true, _) -> Some (B true)
+  | Or (B false, B v2) -> Some (B v2)
+  | Or (B false, e2) -> (
+      match prog_step e2 with
+      | Some e2' -> Some (Or (B false, e2'))
+      | _ -> None
+    )                 
+  | Or (Int _, _) -> None
+  | Or (_, Int _) -> None
+  | Or (e1, e2) -> (
+      match prog_step e1 with
+      | None -> None
+      | Some e1' -> Some (Or (e1', e2))
+    )
+
+let rec prog' (x: prog) (n: int): prog option =
+  if n <= 0 then Some x
+  else
+    match prog_step x with
+    | None -> None
+    | Some x' -> prog' x' (n - 1)
