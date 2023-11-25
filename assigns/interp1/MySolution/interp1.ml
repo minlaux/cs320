@@ -48,15 +48,15 @@ type prog =
   | Push of const
   | Pop
   | Trace
-  | Add of const * const
-  | Sub of const * const
-  | Mul of const * const
-  | Div of const * const
-  | And of const * const
-  | Or of const * const
-  | Not of const
-  | Lt of const * const
-  | Gt of const * const
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | And
+  | Or
+  | Not
+  | Lt
+  | Gt
 
 type stack = const list
 
@@ -79,6 +79,7 @@ let string_of_const x: string =
    | Bool false -> "False"
    | Unit -> "Unit"
 
+(*
 let eval_step(g: prog)(s: stack)(m: mem): prog =
    match g with 
    | Push c -> 
@@ -143,6 +144,73 @@ let eval_step(g: prog)(s: stack)(m: mem): prog =
          else
             Some (list_concat[["False"]; s])
       | _ -> Some (list_concat[["Panic"]; s])
+*)
+
+let eval_step(g: prog)(s: stack)(m: mem): stack * string list option =
+  match g with 
+  | Push c -> (c :: s, None)
+  | Pop -> (
+      match s with 
+      | _ :: xs -> (xs, None)
+      | _ -> (s, Some ["Panic"])
+    )
+  | Trace -> (
+      match s with 
+      | x :: xs -> (s, Some (list_concat [[string_of_const x]; m]))
+      | _ -> (s, Some [])
+    )
+  | Add ->
+    (match s with 
+    | Int i :: Int j :: xs -> (Int (i + j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Sub ->
+    (match s with 
+    | Int i :: Int j :: xs -> (Int (i - j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Mul ->
+    (match s with 
+    | Int i :: Int j :: xs -> (Int (i * j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Div ->
+    (match s with 
+    | Int i :: Int j :: xs -> (Int (i / j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | And -> (
+    match s with 
+    | Bool true :: Bool true :: xs -> (Bool true :: xs, None)
+    | Bool true :: Bool false :: xs -> (Bool false :: xs, None)
+    | Bool false :: Bool true :: xs -> (Bool false :: xs, None)
+    | Bool false :: Bool false :: xs -> (Bool false :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Or -> (
+    match s with 
+    | Bool true :: Bool true :: xs -> (Bool true :: xs, None)
+    | Bool true :: Bool false :: xs -> (Bool true :: xs, None)
+    | Bool false :: Bool true :: xs -> (Bool true :: xs, None)
+    | Bool false :: Bool false :: xs -> (Bool false :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Not -> (
+    match s with 
+    | Bool x :: xs -> (Bool (not x) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Lt -> (
+    match s with 
+    | Int i :: Int j :: xs -> (Bool (i < j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+  | Gt -> (
+    match s with 
+    | Int i :: Int j :: xs -> (Bool (i > j) :: xs, None)
+    | _ -> (s, Some ["Panic"])
+    )
+
 
 let interp(s: string): string list option = 
    match parse(prog()) s with
