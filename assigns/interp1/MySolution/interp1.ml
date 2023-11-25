@@ -39,6 +39,11 @@ grammar: programs
 ⟨coms⟩ ::= ϵ | ⟨com⟩; ⟨coms⟩
 *)
 
+type const =
+  | Int of int
+  | Bool of bool
+  | Unit
+
 type prog =
   | Push of const
   | Pop
@@ -53,11 +58,6 @@ type prog =
   | Lt of const * const
   | Gt of const * const
 
-type const =
-  | Int of int
-  | Bool of bool
-  | Unit
-
 type stack = const list
 
 type mem = string list
@@ -70,8 +70,10 @@ let string_of_bool(b: bool): string =
 
 let int_to_string(i: int): string =
    let c = char_of_digit i in 
+   str c
    
-let string_of_const = function
+let string_of_const x: string =
+   match x with 
    | Int x -> int_to_string x
    | Bool true -> "True"
    | Bool false -> "False"
@@ -81,66 +83,66 @@ let eval_step(g: prog)(s: stack)(m: mem): prog =
    match g with 
    | Push c -> 
       match s with 
-      | Some x -> c :: x 
-      | _ -> x
+      | x :: xs -> c :: x 
+      | _ -> s
    | Pop -> 
       match s with 
       | _ :: xs -> xs
       | _ -> s
    | Trace -> 
       match s with 
-      | x :: xs -> Some list_concat[[string_of_const x]; m]
+      | x :: xs -> Some (list_concat[[string_of_const x]; m])
       | _ -> Some []
    | Add ->
       match s with 
       | Int i :: Int j :: xs -> (i + j) :: xs 
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | Sub ->
       match s with 
       | Int i :: Int j :: xs -> (i - j) :: xs 
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | Mul ->
       match s with 
       | Int i :: Int j :: xs -> (i * j) :: xs 
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | Div ->
       match s with 
       | Int i :: Int j :: xs -> (i / j) :: xs 
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | And -> 
       match m with 
       | Bool true :: Bool true :: xs -> Bool true :: xs 
       | Bool true :: Bool false :: xs -> Bool false :: xs
       | Bool false :: Bool true :: xs -> Bool false :: xs 
       | Bool false :: Bool false :: xs -> Bool false :: xs
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | Or -> 
       match m with 
       | Bool true :: Bool true :: xs -> Bool true :: xs 
       | Bool true :: Bool false :: xs -> Bool true :: xs
       | Bool false :: Bool true :: xs -> Bool true :: xs 
       | Bool false :: Bool false :: xs -> Bool false :: xs
-      | _ -> Some list_concat[["Panic"]; s]
+      | _ -> Some (list_concat[["Panic"]; s])
    | Not ->
       match s with 
       | Bool x :: xs -> not x :: xs
-      | _ -> Some list_concat[["Panic"]; s] 
+      | _ -> Some (list_concat[["Panic"]; s] )
    | Lt ->
       match s with 
       | Int i :: Int j :: xs -> 
          if i < j then 
-            Some list_concat[["True"]; s]
+            Some (list_concat[["True"]; s])
          else
-            Some list_concat[["False"]; s]
-      | _ -> Some list_concat[["Panic"]; s]
+            Some (list_concat[["False"]; s])
+      | _ -> Some (list_concat[["Panic"]; s])
    | Gt ->
       match s with 
       | Int i :: Int j :: xs -> 
          if i > j then 
-            Some list_concat[["True"]; s]
+            Some (list_concat[["True"]; s])
          else
-            Some list_concat[["False"]; s]
-      | _ -> Some list_concat[["Panic"]; s]
+            Some (list_concat[["False"]; s])
+      | _ -> Some (list_concat[["Panic"]; s])
 
 let interp(s: string): string list option = 
    match parse(prog()) s with
