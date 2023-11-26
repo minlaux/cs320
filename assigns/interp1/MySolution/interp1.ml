@@ -39,216 +39,195 @@ grammar: programs
 ⟨coms⟩ ::= ϵ | ⟨com⟩; ⟨coms⟩
 *)
 
+type 'a parser = char list -> ('a * char list) option
+
+let parse (p : 'a parser) (s : string) : ('a * char list) option =
+  p (string_listize s)
+
+let ws : unit parser = many whitespace >| ()
+
 type const =
   | Int of int
   | Bool of bool
   | Unit
 
 type prog =
-  | Push of const
-  | Pop
-  | Trace
-  | Add
-  | Sub
-  | Mul
-  | Div
-  | And
-  | Or
-  | Not
-  | Lt
-  | Gt
+  | Push of const | Pop | Trace
+  | Add | Sub | Mul | Div
+  | And | Or | Not | Lt | Gt
 
-type stack = const list
 
-type mem = string list
+let int_parser: const parser =
+   (let* _ = char '-' in
+   let* x = natural in pure (Int (-x)))
+   <|>
+     (let* x = natural in pure (Int x))
 
-let string_of_bool(b: bool): string = 
-   if b = true then 
-      "True"
-   else 
-      "False"
+let bool_parser: const parser =
+   ((literal "True") >>= fun _ ->
+   pure (Bool true)) 
+  <|> 
+  ((literal "False") >>= fun _ ->
+   pure (Bool false))
 
-let int_to_string(i: int): string =
-   let c = char_of_digit i in 
-   str c
-   
-let string_of_const x: string =
-   match x with 
-   | Int x -> int_to_string x
-   | Bool true -> "True"
-   | Bool false -> "False"
-   | Unit -> "Unit"
+let unit_parser : const parser =
+  (literal "()") >>= fun _ ->
+  pure Unit
 
-(*
-let eval_step(g: prog)(s: stack)(m: mem): prog =
-   match g with 
-   | Push c -> 
-      match s with 
-      | x :: xs -> c :: x 
-      | _ -> s
-   | Pop -> 
-      match s with 
-      | _ :: xs -> xs
-      | _ -> s
-   | Trace -> 
-      match s with 
-      | x :: xs -> Some (list_concat[[string_of_const x]; m])
-      | _ -> Some []
-   | Add ->
-      match s with 
-      | Int i :: Int j :: xs -> (i + j) :: xs 
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Sub ->
-      match s with 
-      | Int i :: Int j :: xs -> (i - j) :: xs 
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Mul ->
-      match s with 
-      | Int i :: Int j :: xs -> (i * j) :: xs 
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Div ->
-      match s with 
-      | Int i :: Int j :: xs -> (i / j) :: xs 
-      | _ -> Some (list_concat[["Panic"]; s])
-   | And -> 
-      match m with 
-      | Bool true :: Bool true :: xs -> Bool true :: xs 
-      | Bool true :: Bool false :: xs -> Bool false :: xs
-      | Bool false :: Bool true :: xs -> Bool false :: xs 
-      | Bool false :: Bool false :: xs -> Bool false :: xs
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Or -> 
-      match m with 
-      | Bool true :: Bool true :: xs -> Bool true :: xs 
-      | Bool true :: Bool false :: xs -> Bool true :: xs
-      | Bool false :: Bool true :: xs -> Bool true :: xs 
-      | Bool false :: Bool false :: xs -> Bool false :: xs
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Not ->
-      match s with 
-      | Bool x :: xs -> not x :: xs
-      | _ -> Some (list_concat[["Panic"]; s] )
-   | Lt ->
-      match s with 
-      | Int i :: Int j :: xs -> 
-         if i < j then 
-            Some (list_concat[["True"]; s])
-         else
-            Some (list_concat[["False"]; s])
-      | _ -> Some (list_concat[["Panic"]; s])
-   | Gt ->
-      match s with 
-      | Int i :: Int j :: xs -> 
-         if i > j then 
-            Some (list_concat[["True"]; s])
-         else
-            Some (list_concat[["False"]; s])
-      | _ -> Some (list_concat[["Panic"]; s])
-*)
+let const_parser: const parser =
+  int_parser <|> bool_parser <|> unit_parser
 
-let eval_step(g: prog)(s: stack)(m: mem): stack * string list option =
-  match g with 
-  | Push c -> (c :: s, None)
-  | Pop -> (
-      match s with 
-      | _ :: xs -> (xs, None)
-      | _ -> (s, Some ["Panic"])
+let push_parser = 
+  (literal "Push") >>= fun _ ->
+  whitespace >>= fun _ ->
+  const_parser >>= fun c -> 
+  ws >>= fun _ ->
+  pure (Push c)
+
+let pop_parser = 
+  (literal "Pop") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Pop
+
+let trace_parser = 
+  (literal "Trace") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Trace
+
+let add_parser = 
+  (literal "Add") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Add
+
+let sub_parser = 
+  (literal "Sub") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Sub
+
+let mul_parser = 
+  (literal "Mul") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Mul
+
+let div_parser = 
+  (literal "Div") >>= fun _ ->
+  whitespace >>= fun _ ->
+  int_parser >>= fun i -> 
+  ws >>= fun _ ->
+  pure Div
+
+let and_parser = 
+  (literal "And") >>= fun _ -> 
+  ws >>= fun _ ->
+  pure And
+
+let or_parser = 
+  (literal "Or") >>= fun _ -> 
+  ws >>= fun _ ->
+  pure Or
+
+let not_parser = 
+  (literal "Not") >>= fun _ -> 
+  ws >>= fun _ ->
+  pure Not
+
+let prog() =
+   push_parser <|> pop_parser <|> trace_parser <|>
+   add_parser <|> sub_parser <|> mul_parser <|> div_parser <|>
+   and_parser <|> or_parser <|> not_parser 
+
+
+let str_to_prog (s: string): prog option = 
+  match s with
+  | "Push" -> Some (Push (Int 0))
+  | "Pop" -> Some Pop
+  | "Trace" -> Some Trace
+  | "Add" -> Some Add
+  | "Sub" -> Some Sub
+  | "Mul" -> Some Mul
+  | "Div" -> Some Div
+  | "And" -> Some And
+  | "Or" -> Some Or
+  | "Not" -> Some Not
+  | "Lt" -> Some Lt 
+  | "Gt" -> Some Gt
+  | _ -> None
+
+
+let eval_step stack op =
+  match op with
+  | Push x -> x :: stack
+  | Pop -> 
+      match stack with 
+      | _ :: rest -> rest
+      | _ -> failwith "Panic"
+  | Add -> (
+      match stack with
+      | Int i :: Int j :: rest -> Int (i + j) :: rest
+      | _ -> failwith "Panic"
     )
-  | Trace -> (
-      match s with 
-      | x :: xs -> (s, Some (list_concat [[string_of_const x]; m]))
-      | _ -> (s, Some [])
+  | Mul -> (
+      match stack with
+      | Int i :: Int j :: rest -> Int (i * j) :: rest
+      | _ -> failwith "Panic"
     )
-  | Add ->
-    (match s with 
-    | Int i :: Int j :: xs -> (Int (i + j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
+  | Sub -> (
+      match stack with
+      | Int i :: Int j :: rest -> Int (i - j) :: rest
+      | _ -> failwith "Panic"
     )
-  | Sub ->
-    (match s with 
-    | Int i :: Int j :: xs -> (Int (i - j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | Mul ->
-    (match s with 
-    | Int i :: Int j :: xs -> (Int (i * j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | Div ->
-    (match s with 
-    | Int i :: Int j :: xs -> (Int (i / j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | And -> (
-    match s with 
-    | Bool true :: Bool true :: xs -> (Bool true :: xs, None)
-    | Bool true :: Bool false :: xs -> (Bool false :: xs, None)
-    | Bool false :: Bool true :: xs -> (Bool false :: xs, None)
-    | Bool false :: Bool false :: xs -> (Bool false :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | Or -> (
-    match s with 
-    | Bool true :: Bool true :: xs -> (Bool true :: xs, None)
-    | Bool true :: Bool false :: xs -> (Bool true :: xs, None)
-    | Bool false :: Bool true :: xs -> (Bool true :: xs, None)
-    | Bool false :: Bool false :: xs -> (Bool false :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | Not -> (
-    match s with 
-    | Bool x :: xs -> (Bool (not x) :: xs, None)
-    | _ -> (s, Some ["Panic"])
-    )
-  | Lt -> (
-    match s with 
-    | Int i :: Int j :: xs -> (Bool (i < j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
+  | Div -> (
+      match stack with
+      | Int i :: Int j :: rest ->
+        if i = 0 then 
+         failwith "Panic"
+        else Int (i / j) :: rest
+      | _ -> failwith "Panic"
     )
   | Gt -> (
-    match s with 
-    | Int i :: Int j :: xs -> (Bool (i > j) :: xs, None)
-    | _ -> (s, Some ["Panic"])
+      match stack with
+      | Int i :: Int j :: rest -> Bool (i > j) :: rest
+      | _ -> failwith "Panic"
+    )
+   | Lt -> (
+      match stack with
+      | Int i :: Int j :: rest -> Bool (i < j) :: rest
+      | _ -> failwith "Panic"
+    )
+  | And -> (
+      match stack with
+      | Bool i :: Bool j :: rest -> Bool (j && i) :: rest
+      | _ -> failwith "Panic"
+    )
+  | Or -> (
+      match stack with
+      | Bool i :: Bool j :: rest -> Bool (j || i) :: rest
+      | _ -> failwith "Panic"
+    )
+  | Not -> (
+      match stack with
+      | Bool i :: rest -> Bool (not i) :: rest
+      | _ -> failwith "Panic"
+    )
+  | Trace -> (
+      (* Print the top of the stack *)
+      match stack with
+      | [] -> []
+      | Int i :: _ -> print_endline (string_of_int i); stack
+      | Bool b :: _ -> print_endline (string_of_bool b); stack
     )
 
-
-let interp(s: string): string list option = 
-   match parse(prog()) s with
-   | Some [program] -> Some (eval program [] [])
-   | _ -> None
-
-let () =
-  let result = interp "Push 3; Push 3; Mul; Push -4; Push 3; Mul; Add; Push 7; Add; Trace" in
-  match result with
-  | Some output -> print_endline (String.concat "; " output)
-  | None -> print_endline "Invalid program"
-
-
-(* ****** ****** *)
-
-(*
-let rec fetch(s: string)(m: mem): int option =
-   match m with
-   | x :: xs ->
-      if s = x then
-         x
-      else
-         fetch s xs
-   | _ -> None
-
-let integer: int parser =
-   (let* _ = char '-' in
-   let* x = natural in pure(-x))
-   <|>
-   (let* x = natural in pure x)
-
-let boolean: const parser =
-   (let* _ = keyword "True" in 
-      pure (B true))
-   <|>
-   (let* _ = keyword "False" in 
-      pure (B false))
-
-let const: const parser =
-  integer <|> boolean
-*)
+let interp (s: string): string list option =
+  match str_to_prog s with
+  | Some p -> Some (List.map (fun c -> match c with Int i -> string_of_int i | Bool b -> string_of_bool b | Unit -> "()") (eval_step [] p))
+  | None -> None
