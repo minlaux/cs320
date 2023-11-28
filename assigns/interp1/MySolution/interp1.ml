@@ -18,6 +18,8 @@ let interp (s : string) : string list option = (* YOUR CODE *)
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 
+(* GRAMMAR *)
+
 (* 
 grammar: constants 
 
@@ -39,12 +41,10 @@ grammar: programs
 ⟨coms⟩ ::= ϵ | ⟨com⟩; ⟨coms⟩
 *)
 
+
+(* TYPE DEFINITIONS *)
+
 type 'a parser = char list -> ('a * char list) option
-
-let parse (p : 'a parser) (s : string) : ('a * char list) option =
-  p (string_listize s)
-
-let ws : unit parser = many whitespace >| ()
 
 type const =
   | Int of int
@@ -56,6 +56,38 @@ type prog =
   | Add | Sub | Mul | Div
   | And | Or | Not | Lt | Gt
 
+
+(* HELPER FUNCTIONS *)
+
+let const_to_string(c: const): string =
+   match c with 
+   | Int i -> str (char_of_digit i)
+   | Bool true -> "True"
+   | Bool false -> "False"
+   | Unit -> "Unit"
+
+let prog_to_string (p: prog): string = 
+   match p with 
+   | Push c -> string_append("Push")(const_to_string c) 
+   | Pop -> "Pop"
+   | Trace -> "Trace"
+   | Add -> "Add"
+   | Sub -> "Sub"
+   | Mul -> "Mul"
+   | Div -> "Div"
+   | And -> "And"
+   | Or -> "Or"
+   | Not -> "Not"
+   | Lt -> "Lt"
+   | Gt -> "Gt"
+
+let ws : unit parser = many whitespace >| ()
+
+
+(* PARSERS *)
+
+let parse (p : 'a parser) (s : string) : ('a * char list) option =
+  p (string_listize s)
 
 let int_parser: const parser =
    (let* _ = char '-' in
@@ -147,87 +179,69 @@ let prog() =
    and_parser <|> or_parser <|> not_parser 
 
 
-let str_to_prog (s: string): prog option = 
-  match s with
-  | "Push" -> Some (Push (Int 0))
-  | "Pop" -> Some Pop
-  | "Trace" -> Some Trace
-  | "Add" -> Some Add
-  | "Sub" -> Some Sub
-  | "Mul" -> Some Mul
-  | "Div" -> Some Div
-  | "And" -> Some And
-  | "Or" -> Some Or
-  | "Not" -> Some Not
-  | "Lt" -> Some Lt 
-  | "Gt" -> Some Gt
-  | _ -> None
+(* INTERPRETER FUNCTIONS *)
 
-
-let eval_step stack op =
-  match op with
+let eval_step(p: prog)(stack: const list) =
+  match p with
   | Push x -> x :: stack
   | Pop -> 
-      match stack with 
+      (match stack with 
       | _ :: rest -> rest
-      | _ -> failwith "Panic"
-  | Add -> (
-      match stack with
+      | _ -> failwith "Panic")
+  | Add -> 
+      (match stack with
       | Int i :: Int j :: rest -> Int (i + j) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Mul -> (
-      match stack with
+      | _ -> failwith "Panic")
+  | Mul -> 
+      (match stack with
       | Int i :: Int j :: rest -> Int (i * j) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Sub -> (
-      match stack with
+      | _ -> failwith "Panic")
+  | Sub -> 
+      (match stack with
       | Int i :: Int j :: rest -> Int (i - j) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Div -> (
-      match stack with
+      | _ -> failwith "Panic")
+  | Div -> 
+      (match stack with
       | Int i :: Int j :: rest ->
         if i = 0 then 
          failwith "Panic"
         else Int (i / j) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Gt -> (
-      match stack with
+      | _ -> failwith "Panic")
+  | Gt -> 
+      (match stack with
       | Int i :: Int j :: rest -> Bool (i > j) :: rest
-      | _ -> failwith "Panic"
-    )
-   | Lt -> (
-      match stack with
+      | _ -> failwith "Panic")
+   | Lt -> 
+      (match stack with
       | Int i :: Int j :: rest -> Bool (i < j) :: rest
-      | _ -> failwith "Panic"
-    )
-  | And -> (
-      match stack with
+      | _ -> failwith "Panic")
+    
+  | And -> 
+      (match stack with
       | Bool i :: Bool j :: rest -> Bool (j && i) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Or -> (
-      match stack with
+      | _ -> failwith "Panic")
+    
+  | Or -> 
+      (match stack with
       | Bool i :: Bool j :: rest -> Bool (j || i) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Not -> (
-      match stack with
+      | _ -> failwith "Panic")
+    
+  | Not -> 
+      (match stack with
       | Bool i :: rest -> Bool (not i) :: rest
-      | _ -> failwith "Panic"
-    )
-  | Trace -> (
-      (* Print the top of the stack *)
+      | _ -> failwith "Panic")
+    
+  | Trace -> 
       match stack with
-      | [] -> []
-      | Int i :: _ -> print_endline (string_of_int i); stack
-      | Bool b :: _ -> print_endline (string_of_bool b); stack
-    )
+      | [] -> failwith "Panic: Empty stack"
+      | i :: _ -> print_endline (const_to_string i); stack
 
-let interp (s: string): string list option =
-  match str_to_prog s with
-  | Some p -> Some (List.map (fun c -> match c with Int i -> string_of_int i | Bool b -> string_of_bool b | Unit -> "()") (eval_step [] p))
+let rec eval_mem(stack: const list): string list =
+  match stack with
+  | [] -> []
+  | x :: rest -> const_to_string x :: eval_mem rest
+
+let interp (s: string)(stack: const list): string list option =
+  match parse(prog())(s) with
+  | Some (p, _) -> Some (eval_mem(eval_step p stack))
   | None -> None
