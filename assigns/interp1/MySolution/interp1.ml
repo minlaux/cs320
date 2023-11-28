@@ -103,7 +103,7 @@ let bool_parser: const parser =
    pure (Bool false))
 
 let unit_parser : const parser =
-  (literal "()") >>= fun _ ->
+  (literal "Unit") >>= fun _ ->
   pure Unit
 
 let const_parser: const parser =
