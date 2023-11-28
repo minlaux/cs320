@@ -191,12 +191,18 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
    | Trace -> 
       (match stack with
       | [] -> ([], "Panic" :: trace)
-      | c :: rest -> (rest, const_to_string c :: trace))
+      | c :: rest -> (Unit :: rest, const_to_string c :: trace))
   | Add -> 
       (match stack with
       | Int i :: Int j :: rest -> (Int (i + j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
    | Sub -> 
@@ -204,6 +210,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Int i :: Int j :: rest -> (Int (i - j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
   | Mul -> 
@@ -211,6 +223,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Int i :: Int j :: rest -> (Int (i * j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
   | Div -> 
@@ -222,6 +240,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
             (Int (i / j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
    | And -> 
@@ -232,6 +256,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Bool false :: Bool false :: rest -> (Bool false :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
   | Or -> 
@@ -242,6 +272,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Bool false :: Bool false :: rest -> (Bool false :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
    | Not -> 
@@ -249,12 +285,19 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Bool true :: rest -> (Bool false :: rest, trace)
       | Bool false :: rest -> (Bool true :: rest, trace)
       | Int i :: rest -> ([], "Panic" :: trace)
+      | Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace))
    | Lt -> 
       (match stack with
       | Int i :: Int j :: rest -> (Bool (i < j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
   | Gt -> 
@@ -262,6 +305,12 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Int i :: Int j :: rest -> (Bool (i > j) :: rest, trace)
       | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
       | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Int i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Int j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Unit :: rest -> ([], "Panic" :: trace)
+      | Unit :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
   
@@ -273,7 +322,6 @@ let rec eval_mem(stack: const list): string list =
 
 let interp(s: string): string list option =
   match parse(prog()) s with
-  | Some (p, rest) ->
-    let _, updated_trace = eval_step p [] [] in
-    Some updated_trace
+  | Some (p, _) -> Some (eval_step p [] [] |> fun (_, trace) -> trace)
   | None -> None
+
