@@ -1,0 +1,8 @@
+Push True;
+Push True;
+Push True;
+Not;
+And;
+Pop;
+Not;
+Trace;

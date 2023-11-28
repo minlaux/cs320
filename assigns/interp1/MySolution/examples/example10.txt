@@ -1,0 +1,11 @@
+Push -1;
+Push -2;
+Mul;
+Trace;
+Trace;
+Pop;
+Pop;
+Pop;
+Push 1;
+Push 2;
+Add;

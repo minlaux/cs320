@@ -313,15 +313,11 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | Unit :: Unit :: rest -> ([], "Panic" :: trace)
       | [] -> ([], "Panic" :: trace)
       | _ :: [] -> ([], "Panic" :: trace))
-  
-
-let rec eval_mem(stack: const list): string list =
-  match stack with
-  | [] -> []
-  | x :: rest -> const_to_string x :: eval_mem rest
 
 let interp(s: string): string list option =
   match parse(prog()) s with
-  | Some (p, _) -> Some (eval_step p [] [] |> fun (_, trace) -> trace)
+  | Some (p, _) ->
+      (match eval_step p [] [] with
+      | (_, trace) -> Some trace)
   | None -> None
 

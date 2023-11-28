@@ -1,0 +1,8 @@
+Push 101;
+Push 010;
+Add;
+Trace;
+Push 1001;
+Push 000001;
+Sub;
+Trace;

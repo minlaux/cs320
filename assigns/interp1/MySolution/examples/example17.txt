@@ -1,0 +1,11 @@
+Push 100;
+Pop;
+Push 10;
+Push 9;
+Mul;
+Trace;
+Pop;
+Push 19;
+Push 12;
+Div;
+Trace;
