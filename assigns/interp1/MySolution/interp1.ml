@@ -86,7 +86,7 @@ let ws : unit parser = many whitespace >| ()
 
 (* PARSERS *)
 
-let parse (p : 'a parser) (s : string) : ('a * char list) option =
+let parse(p: 'a parser)(s: string) : ('a * char list) option =
   p (string_listize s)
 
 let int_parser: const parser =
@@ -181,67 +181,99 @@ let prog() =
 
 (* INTERPRETER FUNCTIONS *)
 
-let eval_step(p: prog)(stack: const list) =
+let eval_step(p: prog)(stack: const list)(trace: string list): const list * string list =
   match p with
-  | Push x -> x :: stack
+  | Push c -> (c :: stack, trace)
   | Pop -> 
       (match stack with 
-      | _ :: rest -> rest
-      | _ -> failwith "Panic")
+      | [] -> ([], "Panic" :: trace)
+      | c :: rest -> (rest, trace))
+   | Trace -> 
+      (match stack with
+      | [] -> ([], "Panic" :: trace)
+      | c :: rest -> (rest, const_to_string c :: trace))
   | Add -> 
       (match stack with
-      | Int i :: Int j :: rest -> Int (i + j) :: rest
-      | _ -> failwith "Panic")
+      | Int i :: Int j :: rest -> (Int (i + j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
+   | Sub -> 
+      (match stack with
+      | Int i :: Int j :: rest -> (Int (i - j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
   | Mul -> 
       (match stack with
-      | Int i :: Int j :: rest -> Int (i * j) :: rest
-      | _ -> failwith "Panic")
-  | Sub -> 
-      (match stack with
-      | Int i :: Int j :: rest -> Int (i - j) :: rest
-      | _ -> failwith "Panic")
+      | Int i :: Int j :: rest -> (Int (i * j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
   | Div -> 
       (match stack with
       | Int i :: Int j :: rest ->
-        if i = 0 then 
-         failwith "Panic"
-        else Int (i / j) :: rest
-      | _ -> failwith "Panic")
-  | Gt -> 
+         if j = 0 then 
+            ([], "Panic" :: trace)
+         else 
+            (Int (i / j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
+   | And -> 
       (match stack with
-      | Int i :: Int j :: rest -> Bool (i > j) :: rest
-      | _ -> failwith "Panic")
-   | Lt -> 
-      (match stack with
-      | Int i :: Int j :: rest -> Bool (i < j) :: rest
-      | _ -> failwith "Panic")
-    
-  | And -> 
-      (match stack with
-      | Bool i :: Bool j :: rest -> Bool (j && i) :: rest
-      | _ -> failwith "Panic")
-    
+      | Bool true :: Bool true :: rest -> (Bool true :: rest, trace)
+      | Bool false :: Bool true :: rest -> (Bool false :: rest, trace)
+      | Bool true :: Bool false :: rest -> (Bool false :: rest, trace)
+      | Bool false :: Bool false :: rest -> (Bool false :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
   | Or -> 
       (match stack with
-      | Bool i :: Bool j :: rest -> Bool (j || i) :: rest
-      | _ -> failwith "Panic")
-    
-  | Not -> 
+      | Bool true :: Bool true :: rest -> (Bool true :: rest, trace)
+      | Bool false :: Bool true :: rest -> (Bool true :: rest, trace)
+      | Bool true :: Bool false :: rest -> (Bool true :: rest, trace)
+      | Bool false :: Bool false :: rest -> (Bool false :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
+   | Not -> 
       (match stack with
-      | Bool i :: rest -> Bool (not i) :: rest
-      | _ -> failwith "Panic")
-    
-  | Trace -> 
-      match stack with
-      | [] -> failwith "Panic: Empty stack"
-      | i :: _ -> print_endline (const_to_string i); stack
+      | Bool true :: rest -> (Bool false :: rest, trace)
+      | Bool false :: rest -> (Bool true :: rest, trace)
+      | Int i :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace))
+   | Lt -> 
+      (match stack with
+      | Int i :: Int j :: rest -> (Bool (i < j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
+  | Gt -> 
+      (match stack with
+      | Int i :: Int j :: rest -> (Bool (i > j) :: rest, trace)
+      | Int i :: Bool j :: rest -> ([], "Panic" :: trace)
+      | Bool i :: Int j :: rest -> ([], "Panic" :: trace)
+      | [] -> ([], "Panic" :: trace)
+      | _ :: [] -> ([], "Panic" :: trace))
+  
 
 let rec eval_mem(stack: const list): string list =
   match stack with
   | [] -> []
   | x :: rest -> const_to_string x :: eval_mem rest
 
-let interp (s: string)(stack: const list): string list option =
-  match parse(prog())(s) with
-  | Some (p, _) -> Some (eval_mem(eval_step p stack))
+let interp(s: string): string list option =
+  match parse(prog()) s with
+  | Some (p, rest) ->
+    let _, updated_trace = eval_step p [] [] in
+    Some updated_trace
   | None -> None
