@@ -76,11 +76,13 @@ let ws : unit parser = many whitespace >| ()
 let parse(p: 'a parser)(s: string) : ('a * char list) option =
   p (string_listize s)
 
-let int_parser: const parser =
-   (let* _ = char '-' in
-   let* x = natural in pure (Int (-x)))
-   <|>
-   (let* x = natural in pure (Int x))
+let int_parser =
+  (let* _ = char '-' in
+   let* x = natural in
+   pure (Int (-x)))
+  <|>
+  (let* x = natural in
+   pure (Int x))
 
 let bool_parser: const parser =
    ((literal "True") >>= fun _ ->
@@ -165,20 +167,18 @@ let not_parser =
   ws >>= fun _ ->
   pure Not
 
-let single_command_parser =
+let command_parser =
   push_parser <|> pop_parser <|> trace_parser <|>
   add_parser <|> sub_parser <|> mul_parser <|> div_parser <|>
   and_parser <|> or_parser <|> not_parser
 
-
 let prog () =
    (let* _ = ws in 
-   let* x = single_command_parser in 
+   let* x = command_parser in 
    let* _ = ws in
    let* _ = char ';' in 
    let* _ = ws in 
    pure x)
-
 
 (* INTERPRETER FUNCTIONS *)
 
