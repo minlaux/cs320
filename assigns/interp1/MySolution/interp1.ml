@@ -1,19 +1,4 @@
-(*
-
-Please implement the interp function following the
-specifications described in CS320_Fall_2023_Project-1.pdf
-
-Notes:
-1. You are only allowed to use library functions defined in MyOCaml.ml
-   or ones you implement yourself.
-2. You may NOT use OCaml standard library functions directly.
-
-let interp (s : string) : string list option = (* YOUR CODE *)
-*)
-
-
 (* ****** ****** *)
-
 
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
@@ -59,14 +44,15 @@ type prog =
 
 (* HELPER FUNCTIONS *)
 
-let const_to_string(c: const): string =
+let toString(c: const): string =
    match c with 
-   | Int i -> str (char_of_digit i)
+   | Int i -> str(char_of_digit i)
    | Bool true -> "True"
    | Bool false -> "False"
    | Unit -> "Unit"
 
-let prog_to_string (p: prog): string = 
+(*
+let prog_to_string(p: prog): string = 
    match p with 
    | Push c -> string_append("Push")(const_to_string c) 
    | Pop -> "Pop"
@@ -80,6 +66,7 @@ let prog_to_string (p: prog): string =
    | Not -> "Not"
    | Lt -> "Lt"
    | Gt -> "Gt"
+*)
 
 let ws : unit parser = many whitespace >| ()
 
@@ -93,7 +80,7 @@ let int_parser: const parser =
    (let* _ = char '-' in
    let* x = natural in pure (Int (-x)))
    <|>
-     (let* x = natural in pure (Int x))
+   (let* x = natural in pure (Int x))
 
 let bool_parser: const parser =
    ((literal "True") >>= fun _ ->
@@ -107,13 +94,18 @@ let unit_parser : const parser =
   pure Unit
 
 let const_parser: const parser =
-  int_parser <|> bool_parser <|> unit_parser
+  (literal "True" >>= fun _ -> pure (Bool true))
+  <|>
+  (literal "False" >>= fun _ -> pure (Bool false))
+  <|>
+  (literal "Unit" >>= fun _ -> pure Unit)
+  <|>
+  int_parser
 
-let push_parser = 
+let push_parser : prog parser =
   (literal "Push") >>= fun _ ->
-  whitespace >>= fun _ ->
-  const_parser >>= fun c -> 
   ws >>= fun _ ->
+  const_parser >>= fun c ->
   pure (Push c)
 
 let pop_parser = 
@@ -173,10 +165,19 @@ let not_parser =
   ws >>= fun _ ->
   pure Not
 
-let prog() =
-   push_parser <|> pop_parser <|> trace_parser <|>
-   add_parser <|> sub_parser <|> mul_parser <|> div_parser <|>
-   and_parser <|> or_parser <|> not_parser 
+let single_command_parser =
+  push_parser <|> pop_parser <|> trace_parser <|>
+  add_parser <|> sub_parser <|> mul_parser <|> div_parser <|>
+  and_parser <|> or_parser <|> not_parser
+
+
+let prog () =
+   (let* _ = ws in 
+   let* x = single_command_parser in 
+   let* _ = ws in
+   let* _ = char ';' in 
+   let* _ = ws in 
+   pure x)
 
 
 (* INTERPRETER FUNCTIONS *)
@@ -191,7 +192,7 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
    | Trace -> 
       (match stack with
       | [] -> ([], "Panic" :: trace)
-      | c :: rest -> (Unit :: rest, const_to_string c :: trace))
+      | c :: rest -> (Unit :: rest, toString c :: trace))
   | Add -> 
       (match stack with
       | Int i :: Int j :: rest -> (Int (i + j) :: rest, trace)
@@ -315,9 +316,13 @@ let eval_step(p: prog)(stack: const list)(trace: string list): const list * stri
       | _ :: [] -> ([], "Panic" :: trace))
 
 let interp(s: string): string list option =
-  match parse(prog()) s with
-  | Some (p, _) ->
-      (match eval_step p [] [] with
-      | (_, trace) -> Some trace)
-  | None -> None
+   match (parse(prog()) s) with
+   | Some (p, _) -> 
+      match eval_step p [] [] with 
+      | (stack, trace) -> Some trace
+   | _ -> None
 
+(*
+p is prog 
+s is char list
+*)
