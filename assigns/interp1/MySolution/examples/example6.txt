@@ -1,0 +1,7 @@
+Push True;
+Push True;
+And;
+Push False;
+Or;
+Not;
+Trace;

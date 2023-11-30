@@ -1,0 +1,26 @@
+Push vi2;
+Fun
+  Push vfi3;
+  Bind;
+  Push vfi3;
+  Lookup;
+  Push 32;
+  Swap;
+  Sub;
+  Push 5;
+  Push 9;
+  Swap;
+  Div;
+  Swap;
+  Mul;
+  Swap;
+  Return;
+End;
+Push vfahrenheittocelsiusi1;
+Bind;
+Push vfahrenheittocelsiusi1;
+Lookup;
+Push 32;
+Swap;
+Call;
+Trace;

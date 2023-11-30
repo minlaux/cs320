@@ -1,0 +1,8 @@
+Push 10;
+Push 11;
+Gt;
+Trace;
+Push 8;
+Push 7;
+Gt;
+Trace;

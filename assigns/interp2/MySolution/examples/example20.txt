@@ -1,0 +1,25 @@
+Push vhappyi2;
+Fun
+  Push vxi3;
+  Bind;
+  Push vxi3;
+  Lookup;
+  Push 1;
+  Swap;
+  Gt;
+  If
+    Push 12;
+  Else
+    Push 8;
+  End;
+  Swap;
+  Return;
+End;
+Push vhappyi1;
+Bind;
+Push vhappyi1;
+Lookup;
+Push 10;
+Swap;
+Call;
+Trace;

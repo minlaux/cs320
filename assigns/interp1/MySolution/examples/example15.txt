@@ -1,0 +1,4 @@
+Push -3;
+Push True;
+And;
+Trace;

@@ -1,0 +1,17 @@
+Push 111;
+Push vxi1;
+Bind;
+Push 10;
+Push vyi2;
+Bind;
+Push vxi1;
+Lookup;
+Push vyi2;
+Lookup;
+Swap;
+Div;
+Push veasieri3;
+Bind;
+Push veasieri3;
+Lookup;
+Trace;

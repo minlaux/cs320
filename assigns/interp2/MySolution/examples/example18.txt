@@ -1,0 +1,78 @@
+Push vi2;
+Fun
+  Push vxi3;
+  Bind;
+  Push vi4;
+  Fun
+    Push vyi5;
+    Bind;
+    Push vi6;
+    Fun
+      Push vi7;
+      Bind;
+      Push vi8;
+      Fun
+        Push vzi9;
+        Bind;
+        Push 2;
+        Push vzi9;
+        Lookup;
+        Push vyi5;
+        Lookup;
+        Swap;
+        Sub;
+        Swap;
+        Add;
+        Push vxi3;
+        Lookup;
+        Swap;
+        Add;
+        Swap;
+        Return;
+      End;
+      Swap;
+      Return;
+    End;
+    Swap;
+    Return;
+  End;
+  Swap;
+  Return;
+End;
+Push vfi1;
+Bind;
+Push vfi1;
+Lookup;
+Push 1;
+Push 2;
+Swap;
+Call;
+Push vi10;
+Fun
+  Push vi11;
+  Bind;
+  Push vi12;
+  Fun
+    Push vi13;
+    Bind;
+    Push vi14;
+    Fun
+      Push vi15;
+      Bind;
+      Push Unit;
+      Swap;
+      Return;
+    End;
+    Swap;
+    Return;
+  End;
+  Swap;
+  Return;
+End;
+Swap;
+Call;
+Push 3;
+Swap;
+Call;
+Swap;
+Call;

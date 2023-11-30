@@ -1,0 +1,16 @@
+Push 2;
+Push vmi1;
+Bind;
+Push 3;
+Push vni2;
+Bind;
+Push vmi1;
+Lookup;
+Push vmi1;
+Lookup;
+Swap;
+Mul;
+Push vni2;
+Lookup;
+Swap;
+Add;

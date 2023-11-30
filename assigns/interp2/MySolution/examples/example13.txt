@@ -1,0 +1,12 @@
+Push 5;
+Push vai1;
+Bind;
+Push 6;
+Push vai1;
+Lookup;
+Swap;
+Add;
+Push vai2;
+Bind;
+Push vai2;
+Lookup;

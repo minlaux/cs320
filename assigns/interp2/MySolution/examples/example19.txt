@@ -1,0 +1,61 @@
+Push vhmi2;
+Fun
+  Push vxi3;
+  Bind;
+  Push vxi3;
+  Lookup;
+  Push 1;
+  Swap;
+  Gt;
+  Not;
+  If
+    Push 1;
+  Else
+    Push vxi3;
+    Lookup;
+    Push vmi4;
+    Bind;
+    Push 2;
+    Push vni5;
+    Bind;
+    Push vmi4;
+    Lookup;
+    Push vni5;
+    Lookup;
+    Swap;
+    Gt;
+    Not;
+    Push vmi4;
+    Lookup;
+    Push vni5;
+    Lookup;
+    Swap;
+    Lt;
+    Not;
+    Swap;
+    And;
+    If
+      Push 3;
+    Else
+      Push vhmi2;
+      Lookup;
+      Push vxi3;
+      Lookup;
+      Push 3;
+      Swap;
+      Sub;
+      Swap;
+      Call;
+    End;
+  End;
+  Swap;
+  Return;
+End;
+Push vhmi1;
+Bind;
+Push vhmi1;
+Lookup;
+Push 100;
+Swap;
+Call;
+Trace;

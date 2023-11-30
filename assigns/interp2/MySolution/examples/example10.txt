@@ -1,0 +1,38 @@
+Push vsumi2;
+Fun
+  Push vni3;
+  Bind;
+  Push vni3;
+  Lookup;
+  Push 0;
+  Swap;
+  Gt;
+  Not;
+  If
+    Push 0;
+  Else
+    Push vni3;
+    Lookup;
+    Push vsumi2;
+    Lookup;
+    Push vni3;
+    Lookup;
+    Push 1;
+    Swap;
+    Sub;
+    Swap;
+    Call;
+    Swap;
+    Add;
+  End;
+  Swap;
+  Return;
+End;
+Push vsumi1;
+Bind;
+Push vsumi1;
+Lookup;
+Push 10;
+Swap;
+Call;
+Trace;

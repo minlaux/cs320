@@ -1,0 +1,49 @@
+Push vfi2;
+Fun
+  Push vni3;
+  Bind;
+  Push vni3;
+  Lookup;
+  Push 0;
+  Swap;
+  Gt;
+  If
+    Push vi5;
+    Fun
+      Push vmi6;
+      Bind;
+      Push vmi6;
+      Lookup;
+      Push 1;
+      Swap;
+      Add;
+      Trace;
+      Swap;
+      Return;
+    End;
+    Push vji4;
+    Bind;
+    Push vji4;
+    Lookup;
+    Push vni3;
+    Lookup;
+    Swap;
+    Call;
+  Else
+    Push vfi2;
+    Lookup;
+    Push 10;
+    Swap;
+    Call;
+  End;
+  Swap;
+  Return;
+End;
+Push vfi1;
+Bind;
+Push vfi1;
+Lookup;
+Push 5;
+Swap;
+Sub;
+Trace;

@@ -1,0 +1,38 @@
+Push vloopi2;
+Fun
+  Push vni3;
+  Bind;
+  Push vni3;
+  Lookup;
+  Push 0;
+  Swap;
+  Gt;
+  Not;
+  If
+    Push Unit;
+    Trace;
+  Else
+    Push vni3;
+    Lookup;
+    Trace;
+    Pop;
+    Push vloopi2;
+    Lookup;
+    Push vni3;
+    Lookup;
+    Push 1;
+    Swap;
+    Sub;
+    Swap;
+    Call;
+  End;
+  Swap;
+  Return;
+End;
+Push vloopi1;
+Bind;
+Push vloopi1;
+Lookup;
+Push 5;
+Swap;
+Call;
