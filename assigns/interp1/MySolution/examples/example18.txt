@@ -1,3 +1,0 @@
-Push 10;
-Push False;
-Sub;

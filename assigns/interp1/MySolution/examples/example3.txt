@@ -1,6 +1,0 @@
-
-
-Push True;
-Push False;
-And;
-Trace;

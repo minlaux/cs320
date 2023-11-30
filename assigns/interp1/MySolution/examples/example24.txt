@@ -1,6 +1,0 @@
-Push 1; 
-Push 2; 
-Add; 
-Push 3; 
-Gt; 
-Trace;

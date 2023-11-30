@@ -1,6 +1,0 @@
-Push 3;
-Push 5;
-Trace;
-Trace;
-Pop; 
-Trace;

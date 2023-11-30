@@ -1,4 +1,0 @@
-Push 3;
-Trace;
-Trace;
-Trace;
