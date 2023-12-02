@@ -34,17 +34,6 @@ grammar: programs
 
 (* TYPE DEFINITIONS *)
 
-type digit = 
-   | 0 
-   | 1 
-   | 2 
-   | 3 
-   | 4 
-   | 5 
-   | 6 
-   | 7 
-   | 8 
-   | 9
 
 type sym = 
    | Char of char 
@@ -100,6 +89,7 @@ let toString(c: const): string =
    | Bool true -> "True"
    | Bool false -> "False"
    | Unit -> "Unit"
+   | Sym -> "Sym"
 
 
 (* PARSERS *)
@@ -123,12 +113,18 @@ let bool_parser =
 let unit_parser =
    keyword "Unit" >> pure Unit
 
+let sym_parser = 
+   (let* x = many1 (satisfy (fun c -> is_alpha c)) in
+   pure (implode x))
+
 let const_parser =
   int_parser
   <|>
   bool_parser
   <|>
   unit_parser
+  <|>
+  sym_parser
 
 let com_parser =
    (keyword "Push" >> const_parser >>= fun c ->
@@ -155,6 +151,14 @@ let com_parser =
    (keyword "Lt" >> pure Lt)
    <|>
    (keyword "Gt" >> pure Gt)
+   <|>
+   (keyword "If" >> pure If)
+   <|> 
+   (keyword "Bind" >> pure Bind)
+   <|>
+   (keyword "Lookup" >> pure Lookup)
+   <|>
+   (keyword "Fun" >> pure Fun)
 
 let coms_parser = 
    many(com_parser << keyword ";")
@@ -246,7 +250,7 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Bind :: p0 -> 
       (match s with 
       | Sym x :: v0 :: s0 -> 
-         let x = v0 in 
+         let x >> v0 in 
          eval_step s0 t (x :: v) p0 
       | _ :: v0 :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
@@ -262,18 +266,24 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Fun :: c :: End :: p0 ->
       (match s with 
       | Sym x :: s0 -> 
-         let 
-      create closure val on s with name x
+         let x = map p0 (fun c -> c) in
+         eval_step ((x :: v) :: s0) t v p0       # ????
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
+      (match s with 
+      | (f, v0, c) :: a :: s0 -> eval_step (2 :: (f, v0, c) :: s0) t v p0
+      | v0 not closure -> eval_step [] ("Panic" :: t) v []
+      | | [] -> eval_step [] ("Panic" :: t) v []
+      | _ :: s0 -> eval_step [] ("Panic" :: t) v [])
    | Return :: p0 ->
-   
+      (match s with 
+      | (f, v0, c) :: a :: s0 -> eval_step (a :: s0) t v0 p0
+      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
+      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
+      | [] -> eval_step [] ("Panic" :: t) v [])
 
-
-
-
-
-
-
-let interp (s : string) : string list option = (* YOUR CODE *)
+let interp (s: string): string list option =
+   match string_parse (whitespaces >> coms_parser) s with
+  | Some (p, [], []) -> Some (eval_steps [] [] [] p)
+  | _ -> None
