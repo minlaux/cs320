@@ -48,7 +48,7 @@ type com =
    | Add | Sub | Mul | Div
    | And | Or | Not 
    | Lt | Gt
-   | If of coms
+   | If of coms * coms
    | Bind | Lookup 
    | Fun of coms | Call | Return
 
