@@ -44,7 +44,7 @@ type const =
    | Sym of sym
 
 type com =
-   | Push of const | Pop | Trace
+   | Push of const | Pop | Swap | Trace
    | Add | Sub | Mul | Div
    | And | Or | Not 
    | Lt | Gt
@@ -156,6 +156,8 @@ let rec com_parser =
    <|>
    (keyword "Pop" >> pure Pop)
    <|>
+   (keyword "Swap" >> pure Swap)
+   <|>
    (keyword "Trace" >> pure Trace)
    <|>
    (keyword "Add" >> pure Add)
@@ -176,18 +178,17 @@ let rec com_parser =
    <|>
    (keyword "Gt" >> pure Gt)
    <|>
-   (keyword "If" >> coms_parser >>= fun c1 ->
-   keyword "Else" >> coms_parser >>= fun c2 ->
-   keyword "End" >> pure (If [c1; c2]))
+   (keyword "If" >> com_parser >>= fun c ->
+      pure (If c))
    <|> 
    (keyword "Bind" >> pure Bind)
    <|>
    (keyword "Lookup" >> pure Lookup)
    <|>
-   (keyword "Fun" >> coms_parser >>= fun c ->
-   keyword "End" >> pure (Fun [c]))
-   
-and coms_parser = 
+   (keyword "Fun" >> com_parser >>= fun c ->
+      pure (Fun c))
+
+and coms_parser: coms parser =   
    many (com_parser << keyword ";")
 
 
@@ -321,5 +322,5 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
 
 let interp (s: string): string list option =
    match string_parse (whitespaces >> coms_parser) s with
-  | Some (p, [], []) -> Some (eval_steps [] [] [] p)
+  | Some (p, [], []) -> Some (eval_step [] [] [] p)
   | _ -> None
