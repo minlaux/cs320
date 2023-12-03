@@ -34,11 +34,8 @@ grammar: programs
 
 (* TYPE DEFINITIONS *)
 
-
 type sym = 
    | Char of char 
-   | SChar of sym * char 
-   | SDig of sym * digit
 
 type const =
    | Int of int
@@ -51,11 +48,11 @@ type com =
    | Add | Sub | Mul | Div
    | And | Or | Not 
    | Lt | Gt
-   | If of coms * coms 
+   | If of coms
    | Bind | Lookup 
    | Fun of coms | Call | Return
 
-type coms = com list
+and coms = com list
 
 type stack = const list 
 
@@ -64,6 +61,12 @@ type trace = string list
 type venv = (string * const) list
 
 type prog = coms
+
+type closure = {
+   name: sym;
+   capt_env: venv;
+   body: coms;
+}
 
 
 (* HELPER FUNCTIONS *)
@@ -89,7 +92,19 @@ let toString(c: const): string =
    | Bool true -> "True"
    | Bool false -> "False"
    | Unit -> "Unit"
-   | Sym -> "Sym"
+   | Sym x -> "x"
+
+let is_lower_case c =
+   'a' <= c && c <= 'z'
+
+let is_upper_case c =
+   'A' <= c && c <= 'Z'
+
+let is_alpha c =
+   is_lower_case c || is_upper_case c
+
+let is_digit c =
+   '0' <= c && c <= '9'
 
 
 (* PARSERS *)
@@ -113,9 +128,18 @@ let bool_parser =
 let unit_parser =
    keyword "Unit" >> pure Unit
 
-let sym_parser = 
-   (let* x = many1 (satisfy (fun c -> is_alpha c)) in
-   pure (implode x))
+let char_parser =
+   satisfy is_alpha
+
+let digit_parser = 
+   satisfy is_digit
+
+let sym_parser =
+   (let* c = char_parser in 
+      pure (Sym (Char c)))
+   <|>
+   (let* d = digit_parser in 
+      pure (Sym (Char d)))
 
 let const_parser =
   int_parser
@@ -126,7 +150,7 @@ let const_parser =
   <|>
   sym_parser
 
-let com_parser =
+let rec com_parser =
    (keyword "Push" >> const_parser >>= fun c ->
       pure (Push c))
    <|>
@@ -152,16 +176,19 @@ let com_parser =
    <|>
    (keyword "Gt" >> pure Gt)
    <|>
-   (keyword "If" >> pure If)
+   (keyword "If" >> coms_parser >>= fun c1 ->
+   keyword "Else" >> coms_parser >>= fun c2 ->
+   keyword "End" >> pure (If [c1; c2]))
    <|> 
    (keyword "Bind" >> pure Bind)
    <|>
    (keyword "Lookup" >> pure Lookup)
    <|>
-   (keyword "Fun" >> pure Fun)
-
-let coms_parser = 
-   many(com_parser << keyword ";")
+   (keyword "Fun" >> coms_parser >>= fun c ->
+   keyword "End" >> pure (Fun [c]))
+   
+and coms_parser = 
+   many (com_parser << keyword ";")
 
 
 (* INTERPRETER FUNCTIONS *)
@@ -250,7 +277,7 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Bind :: p0 -> 
       (match s with 
       | Sym x :: v0 :: s0 -> 
-         let x >> v0 in 
+         let x = v0 in 
          eval_step s0 t (x :: v) p0 
       | _ :: v0 :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
@@ -266,19 +293,28 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Fun :: c :: End :: p0 ->
       (match s with 
       | Sym x :: s0 -> 
-         let x = map p0 (fun c -> c) in
-         eval_step ((x :: v) :: s0) t v p0       # ????
+         let closure = {name = x; capt_env = v; body = c} in 
+         eval_step (closure :: s0) t v p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
       (match s with 
-      | (f, v0, c) :: a :: s0 -> eval_step (2 :: (f, v0, c) :: s0) t v p0
-      | v0 not closure -> eval_step [] ("Panic" :: t) v []
-      | | [] -> eval_step [] ("Panic" :: t) v []
-      | _ :: s0 -> eval_step [] ("Panic" :: t) v [])
+      | closure :: a :: s0 -> 
+         (match closure with 
+         | {name = cc; capt_env = v'; body = p0} ->
+            let vf = cc :: v' in
+            eval_step (a :: {name = cc; capt_env = v'; body = p0} :: s0) t vf p0
+         | _ -> eval_step [] ("Panic" :: t) v [])
+      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
+      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
+      | [] -> eval_step [] ("Panic" :: t) v [])
    | Return :: p0 ->
       (match s with 
-      | (f, v0, c) :: a :: s0 -> eval_step (a :: s0) t v0 p0
+      | closure :: a :: s0 -> 
+         (match closure with 
+         | {capt_env = v'; body = p0} ->
+            eval_step (a :: s0) t v' p0
+         | _ -> eval_step [] ("Panic" :: t) v [])
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
