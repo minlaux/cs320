@@ -36,7 +36,7 @@ grammar: programs
 
 type sym = 
    | Char of char 
-   | CDig of sym * sym
+   | CDig of sym * char
 
 type const =
    | Int of int
@@ -55,19 +55,19 @@ type com =
 
 and coms = com list
 
-type venv = (string * const) list
+type value =
+    | Const of const 
+    | Closure of closure
 
-type closure = {
+and venv = (string * value) list
+
+and closure = {
    name: sym;
    capt_env: venv;
    body: coms;
 }
 
-type stack_elems =
-   | Const of const 
-   | Closure of closure
-
-type stack = stack_elems list 
+type stack = value list 
 
 type trace = string list 
 
@@ -117,7 +117,7 @@ let str_of_int(n: int): string =
 let rec str_of_sym(s: sym): string =
    match s with 
    | Char c -> str c
-   | CDig (s1, s2) -> string_append (str_of_sym s1) (str_of_sym s2)
+   | CDig (s1, c1) -> string_append (str_of_sym s1) (str c1)
 
 let toString(c: const): string =
    match c with 
@@ -156,25 +156,23 @@ let digit_parser =
    satisfy is_digit
 
 let rec sym_parser =
-   let char_sym_parser = 
-      char_parser >>= fun c -> pure (Char c) in
+  let char_sym_parser =
+    char_parser >>= fun c -> pure (Char c)
+  in
 
-   let rec concat_sym_parser acc =
-      (char_parser >>= fun c -> 
-         concat_sym_parser (CDig (acc, Char c)))
-      <|> pure acc in
+  let rec concat_sym_parser acc =
+    (char_parser >>= fun c ->
+      concat_sym_parser (CDig (acc, c)))
+    <|>
+    (digit_parser >>= fun d ->
+      concat_sym_parser (CDig (acc, d)))
+    <|>
+    pure acc
+  in
 
-   char_sym_parser >>= concat_sym_parser
-(*
-let rec sym_parser =
-   (let* c = char_parser in 
-      pure (Char c))
-   <|>
-   (let* c = char_parser in 
-      let* s = sym_parser in 
-      pure (CDig (s, Char c)))
-   
-*)
+  char_sym_parser >>= concat_sym_parser
+
+
 let const_parser =
    int_parser
    <|>
@@ -184,53 +182,6 @@ let const_parser =
    <|>
    (sym_parser >>= fun s ->
       pure (Sym s))
-(*
-let com_parser =
-   (keyword "Push" >> const_parser >>= fun c ->
-      pure (Push c))
-   <|>
-   (keyword "Pop" >> pure Pop)
-   <|>
-   (keyword "Swap" >> pure Swap)
-   <|>
-   (keyword "Trace" >> pure Trace)
-   <|>
-   (keyword "Add" >> pure Add)
-   <|>
-   (keyword "Sub" >> pure Sub)
-   <|>
-   (keyword "Mul" >> pure Mul)
-   <|>
-   (keyword "Div" >> pure Div)
-   <|>
-   (keyword "And" >> pure And)
-   <|>
-   (keyword "Or" >> pure Or)
-   <|>
-   (keyword "Not" >> pure Not)
-   <|>
-   (keyword "Lt" >> pure Lt)
-   <|>
-   (keyword "Gt" >> pure Gt)
-   <|>
-   (keyword "If" >> coms_parser >>= fun c1 ->
-      keyword "Else" >> coms_parser >>= fun c2 ->
-      keyword "End" >> pure (If (c1, c2)))
-   <|> 
-   (keyword "Bind" >> pure Bind)
-   <|>
-   (keyword "Lookup" >> pure Lookup)
-   <|>
-   (keyword "Fun" >> coms_parser >>= fun c ->
-      keyword "End" >> pure (Fun c))
-   <|>
-   (keyword "Call" >> pure Call)
-   <|>
-   (keyword "Return" >> pure Return)
-
-and coms_parser =   
-   many (com_parser << keyword ";")
-*)
 
 let rec com_parser input =
    ((keyword "Push" >> const_parser >>= fun c ->
@@ -280,6 +231,7 @@ and coms_parser input =
 
 
 (* INTERPRETER FUNCTIONS *)
+
 
 let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    match p with
@@ -364,16 +316,16 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Bind :: p0 -> 
       (match s with 
-      | Const(Sym x) :: Const v0 :: s0 -> 
+      | Const (Sym x) :: v0 :: s0 -> 
          eval_step s0 t ((str_of_sym x, v0) :: v) p0 
       | _ :: v0 :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Lookup :: p0 ->
       (match s with 
-      | Const(Sym x) :: s0 -> 
+      | Const (Sym x) :: s0 -> 
          let found = fetch (str_of_sym x) v in 
-         eval_step (Const found :: s0) t v p0
+         eval_step (found :: s0) t v p0
          (*
          (match v with 
          | (x, v0) :: v1 -> eval_step (v0 :: s0) t v p0
@@ -383,24 +335,28 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Fun c :: p0 ->
       (match s with 
       | Const (Sym x) :: s0 -> 
-         let closure = {name = x; capt_env = v; body = c} in 
-         eval_step (Closure closure :: s0) t v p0
+         let f = {name = x; capt_env = v; body = c} in 
+         eval_step (Closure f :: s0) t v p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
       (match s with
-      | Closure {capt_env; body} :: a :: s0 -> 
-         eval_step (a :: s0) t capt_env (body @ p0)
+      | Const (Sym f) :: a :: s0 ->
+        let closure = fetch (str_of_sym f) v in 
+        eval_step (a :: Const (Sym f) :: s0) t ((str_of_sym f, closure) :: v) p0
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
-   | Return :: p0 -> 
-      (match s with 
-      | v0 :: Closure {capt_env; _} :: s0 ->
-         eval_step (v0 :: s0) t capt_env p0
-      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
-      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
-      | [] -> eval_step [] ("Panic" :: t) v [])
+    | Return :: p0 -> 
+        (match s with 
+        | Const (Sym f) :: a :: s0 ->
+            (match fetch (str_of_sym f) v with
+            | Closure closure ->
+                eval_step (a :: s0) t closure.capt_env closure.body
+            | _ -> eval_step [] ("Panic" :: t) v [])
+        | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
+        | _ :: s0 -> eval_step [] ("Panic" :: t) v []
+        | [] -> eval_step [] ("Panic" :: t) v [])
 
 let interp (s: string): string list option =
    match string_parse (whitespaces >> coms_parser) s with
