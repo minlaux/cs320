@@ -55,19 +55,23 @@ type com =
 
 and coms = com list
 
-type stack = const list 
-
-type trace = string list 
-
 type venv = (string * const) list
-
-type prog = coms
 
 type closure = {
    name: sym;
    capt_env: venv;
    body: coms;
 }
+
+type stack_elems =
+   | Const of const 
+   | Closure of closure
+
+type stack = stack_elems list 
+
+type trace = string list 
+
+type prog = coms
 
 
 (* HELPER FUNCTIONS *)
@@ -267,12 +271,22 @@ and coms_parser input =
    (many (com_parser << keyword ";")) input
 
 
+
+let rec fetch (s: string) (v: venv) =
+   match v with
+   | (x, v0) :: v1 -> 
+      if s = x then 
+         v0 
+      else 
+         fetch s v1
+
+
 (* INTERPRETER FUNCTIONS *)
 
 let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    match p with
    | [] -> t
-   | Push c :: p0 -> eval_step (c :: s) t v p0
+   | Push c :: p0 -> eval_step (Const c :: s) t v p0
    | Pop :: p0 -> 
       (match s with 
       | _ :: s0 -> eval_step s0 t v p0
@@ -284,66 +298,66 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | Trace :: p0 -> 
       (match s with
-      | c :: s0 -> eval_step (Unit :: s0) (toString c :: t) v p0
+      | Const c :: s0 -> eval_step (Const Unit :: s0) (toString c :: t) v p0
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Add :: p0 -> 
       (match s with
-      | Int i :: Int j :: s0 -> eval_step (Int (i + j) :: s0) t v p0
+      | Const(Int i) :: Const(Int j) :: s0 -> eval_step (Const(Int (i + j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | Sub :: p0 -> 
       (match s with
-      | Int i :: Int j :: s0 -> eval_step (Int (i - j) :: s0) t v p0
+      | Const(Int i) :: Const(Int j) :: s0 -> eval_step (Const(Int (i - j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
   | Mul :: p0 -> 
       (match s with
-      | Int i :: Int j :: s0 -> eval_step (Int (i * j) :: s0) t v p0
+      | Const(Int i) :: Const(Int j) :: s0 -> eval_step (Const(Int (i * j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
   | Div :: p0 -> 
       (match s with
-      | Int i :: Int 0 :: s0 -> eval_step [] ("Panic" :: t) v []
-      | Int i :: Int j :: s0 -> eval_step (Int (i / j) :: s0) t v p0
+      | Const(Int i) :: Const(Int 0) :: s0 -> eval_step [] ("Panic" :: t) v []
+      | Const(Int i) :: Const(Int j) :: s0 -> eval_step (Const(Int (i / j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | And :: p0 -> 
       (match s with
-      | Bool a :: Bool b :: s0 -> eval_step (Bool (a && b) :: s0) t v p0
+      | Const(Bool a) :: Const(Bool b) :: s0 -> eval_step (Const(Bool (a && b)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
   | Or :: p0 -> 
       (match s with
-      | Bool a :: Bool b :: s0 -> eval_step (Bool (a || b) :: s0) t v p0
+      | Const(Bool a) :: Const(Bool b) :: s0 -> eval_step (Const(Bool (a || b)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | Not :: p0 -> 
       (match s with
-      | Bool a :: s0 -> eval_step (Bool (not a) :: s0) t v p0
+      | Const(Bool a) :: s0 -> eval_step (Const(Bool (not a)) :: s0) t v p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | Lt :: p0 -> 
       (match s with
-      | Int i :: Int j :: s0 -> eval_step (Bool (i < j) :: s0) t v p0
+      | Const(Int i) :: Const(Int j) :: s0 -> eval_step (Const(Bool (i < j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
   | Gt :: p0 -> 
       (match s with
-      | Int i :: Int j :: s0 -> eval_step (Bool (i > j) :: s0) t v p0
+      | Const (Int i) :: Const (Int j) :: s0 -> eval_step (Const(Bool (i > j)) :: s0) t v p0
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
    | If (c1, c2) :: p0 -> 
       (match s with 
-      | Bool b :: s0 -> 
+      | Const(Bool b) :: s0 -> 
          if b = true then 
             eval_step s0 t v (c1 @ p0)
          else 
@@ -352,34 +366,54 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Bind :: p0 -> 
       (match s with 
-      | Sym x :: v0 :: s0 -> 
+      | Const(Sym x) :: Const v0 :: s0 -> 
          eval_step s0 t ((str_of_sym x, v0) :: v) p0 
       | _ :: v0 :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Lookup :: p0 ->
       (match s with 
-      | Sym x :: s0 -> 
+      | Const(Sym x) :: s0 -> 
+         let found = fetch (str_of_sym x) v in 
+         eval_step (Const found :: s0) t v p0
+         (*
          (match v with 
-         | x :: v0 -> eval_step (x :: s0) t v p0
-         | _ :: v0 -> eval_step [] ("Panic" :: t) v [])
+         | (x, v0) :: v1 -> eval_step (v0 :: s0) t v p0
+         | _ :: v0 -> eval_step [] ("Panic" :: t) v [])*)
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Fun c :: p0 ->
       (match s with 
-      | Sym x :: s0 -> 
+      | Const (Sym x) :: s0 -> 
          let closure = {name = x; capt_env = v; body = c} in 
-         eval_step (closure :: s0) t capt_env p0
+         eval_step (Closure closure :: s0) t v p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
+      (match s with
+      | Closure {capt_env; body} :: arg :: s0 -> 
+         eval_step (arg :: s0) t capt_env (body @ p0)
+      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
+      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
+      | [] -> eval_step [] ("Panic" :: t) v [])
+   | Return :: p0 -> 
       (match s with 
-      | closure :: a :: s0 -> 
-         (match closure with 
-         | {name = cc; capt_env = v'; body = p0} ->
-            let vf = cc :: v' in
-            eval_step (a :: {name = cc; capt_env = v'; body = p0} :: s0) t vf p0
-         | _ -> eval_step [] ("Panic" :: t) v [])
+      | v0 :: Closure {capt_env; _} :: s0 ->
+         eval_step (v0 :: s0) t capt_env p0
+      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
+      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
+      | [] -> eval_step [] ("Panic" :: t) v [])
+
+   (*
+   | Call :: p0 -> 
+      (match s with 
+      | Closure {name = f; capt_env = v; body = c} :: a :: s0 -> 
+         let closure = {name = f; capt_env = v; body = c} in
+         let vf = (str_of_sym f, Closure closure) :: v in 
+         let new_closure = {name = cc; capt_env = v; body = p0} in 
+
+         eval_step (a :: Closure new_closure :: s0) t vf c
+         | _ -> eval_step [] ("Panic" :: t) v []
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
@@ -393,8 +427,9 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
+   *)   
 
 let interp (s: string): string list option =
    match string_parse (whitespaces >> coms_parser) s with
-  | Some (p, [], []) -> Some (eval_step [] [] [] p)
+  | Some (p, []) -> Some (eval_step [] [] [] p)
   | _ -> None
