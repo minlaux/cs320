@@ -88,6 +88,14 @@ let is_alpha c =
 let is_digit c =
    '0' <= c && c <= '9'
 
+let rec fetch (s: string) (v: venv) =
+   match v with
+   | (x, v0) :: v1 -> 
+      if s = x then 
+         v0 
+      else 
+         fetch s v1
+
 
 (* STRING FUNCTIONS *)
 
@@ -271,16 +279,6 @@ and coms_parser input =
    (many (com_parser << keyword ";")) input
 
 
-
-let rec fetch (s: string) (v: venv) =
-   match v with
-   | (x, v0) :: v1 -> 
-      if s = x then 
-         v0 
-      else 
-         fetch s v1
-
-
 (* INTERPRETER FUNCTIONS *)
 
 let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
@@ -391,8 +389,8 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
       (match s with
-      | Closure {capt_env; body} :: arg :: s0 -> 
-         eval_step (arg :: s0) t capt_env (body @ p0)
+      | Closure {capt_env; body} :: a :: s0 -> 
+         eval_step (a :: s0) t capt_env (body @ p0)
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
@@ -403,31 +401,6 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
-
-   (*
-   | Call :: p0 -> 
-      (match s with 
-      | Closure {name = f; capt_env = v; body = c} :: a :: s0 -> 
-         let closure = {name = f; capt_env = v; body = c} in
-         let vf = (str_of_sym f, Closure closure) :: v in 
-         let new_closure = {name = cc; capt_env = v; body = p0} in 
-
-         eval_step (a :: Closure new_closure :: s0) t vf c
-         | _ -> eval_step [] ("Panic" :: t) v []
-      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
-      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
-      | [] -> eval_step [] ("Panic" :: t) v [])
-   | Return :: p0 ->
-      (match s with 
-      | closure :: a :: s0 -> 
-         (match closure with 
-         | {capt_env = v'; body = p0} ->
-            eval_step (a :: s0) t v' p0
-         | _ -> eval_step [] ("Panic" :: t) v [])
-      | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
-      | _ :: s0 -> eval_step [] ("Panic" :: t) v []
-      | [] -> eval_step [] ("Panic" :: t) v [])
-   *)   
 
 let interp (s: string): string list option =
    match string_parse (whitespaces >> coms_parser) s with
