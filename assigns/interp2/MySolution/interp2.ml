@@ -326,10 +326,6 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | Const (Sym x) :: s0 -> 
          let found = fetch (str_of_sym x) v in 
          eval_step (found :: s0) t v p0
-         (*
-         (match v with 
-         | (x, v0) :: v1 -> eval_step (v0 :: s0) t v p0
-         | _ :: v0 -> eval_step [] ("Panic" :: t) v [])*)
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Fun c :: p0 ->

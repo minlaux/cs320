@@ -1,0 +1,13 @@
+Push fact;
+Trace;
+Fun
+    Push n;
+    Bind;
+    Push n;
+    Lookup;
+    Push 2;
+    Gt;
+    Trace;
+End;
+Call;
+Trace;
