@@ -36,7 +36,7 @@ grammar: programs
 
 type sym = 
    | Char of char 
-   | CDig of sym * char
+   | CDig of sym * sym
 
 type const =
    | Int of int
@@ -72,6 +72,21 @@ type closure = {
 
 (* HELPER FUNCTIONS *)
 
+let is_lower_case c =
+   'a' <= c && c <= 'z'
+
+let is_upper_case c =
+   'A' <= c && c <= 'Z'
+
+let is_alpha c =
+   is_lower_case c || is_upper_case c
+
+let is_digit c =
+   '0' <= c && c <= '9'
+
+
+(* STRING FUNCTIONS *)
+
 let rec str_of_nat(n: int): string = 
    let d = n mod 10 in 
    let n0 = n / 10 in
@@ -87,9 +102,10 @@ let str_of_int(n: int): string =
    else 
       str_of_nat n
 
-let str_of_sym(c): string =
-   match c with 
+let rec str_of_sym(s: sym): string =
+   match s with 
    | Char c -> str c
+   | CDig (s1, s2) -> string_append (str_of_sym s1) (str_of_sym s2)
 
 let toString(c: const): string =
    match c with 
@@ -98,18 +114,6 @@ let toString(c: const): string =
    | Bool false -> "False"
    | Unit -> "Unit"
    | Sym x -> str_of_sym x
-
-let is_lower_case c =
-   'a' <= c && c <= 'z'
-
-let is_upper_case c =
-   'A' <= c && c <= 'Z'
-
-let is_alpha c =
-   is_lower_case c || is_upper_case c
-
-let is_digit c =
-   '0' <= c && c <= '9'
 
 
 (* PARSERS *)
@@ -139,18 +143,26 @@ let char_parser =
 let digit_parser = 
    satisfy is_digit
 
-let rec sym_parser_helper () =
+let rec sym_parser =
+   let char_sym_parser = 
+      char_parser >>= fun c -> pure (Char c) in
+
+   let rec concat_sym_parser acc =
+      (char_parser >>= fun c -> 
+         concat_sym_parser (CDig (acc, Char c)))
+      <|> pure acc in
+
+   char_sym_parser >>= concat_sym_parser
+(*
+let rec sym_parser =
    (let* c = char_parser in 
       pure (Char c))
    <|>
    (let* c = char_parser in 
-      let* s = sym_parser_helper () in 
-      pure (CDig (s, c)))
-   <|>
-   (let* d = digit_parser in 
-      let* s = sym_parser_helper () in 
-      pure (CDig (s, d)))
-
+      let* s = sym_parser in 
+      pure (CDig (s, Char c)))
+   
+*)
 let const_parser =
    int_parser
    <|>
@@ -158,9 +170,9 @@ let const_parser =
    <|>
    unit_parser
    <|>
-   (sym_parser_helper () >>= fun s ->
+   (sym_parser >>= fun s ->
       pure (Sym s))
-
+(*
 let com_parser =
    (keyword "Push" >> const_parser >>= fun c ->
       pure (Push c))
@@ -206,6 +218,53 @@ let com_parser =
 
 and coms_parser =   
    many (com_parser << keyword ";")
+*)
+
+let rec com_parser input =
+   ((keyword "Push" >> const_parser >>= fun c ->
+      pure (Push c))
+   <|>
+   (keyword "Pop" >> pure Pop)
+   <|>
+   (keyword "Swap" >> pure Swap)
+   <|>
+   (keyword "Trace" >> pure Trace)
+   <|>
+   (keyword "Add" >> pure Add)
+   <|>
+   (keyword "Sub" >> pure Sub)
+   <|>
+   (keyword "Mul" >> pure Mul)
+   <|>
+   (keyword "Div" >> pure Div)
+   <|>
+   (keyword "And" >> pure And)
+   <|>
+   (keyword "Or" >> pure Or)
+   <|>
+   (keyword "Not" >> pure Not)
+   <|>
+   (keyword "Lt" >> pure Lt)
+   <|>
+   (keyword "Gt" >> pure Gt)
+   <|>
+   (keyword "If" >> coms_parser >>= fun c1 ->
+      keyword "Else" >> coms_parser >>= fun c2 ->
+      keyword "End" >> pure (If (c1, c2)))
+   <|> 
+   (keyword "Bind" >> pure Bind)
+   <|>
+   (keyword "Lookup" >> pure Lookup)
+   <|>
+   (keyword "Fun" >> coms_parser >>= fun c ->
+      keyword "End" >> pure (Fun c))
+   <|>
+   (keyword "Call" >> pure Call)
+   <|>
+   (keyword "Return" >> pure Return)) input
+
+and coms_parser input =   
+   (many (com_parser << keyword ";")) input
 
 
 (* INTERPRETER FUNCTIONS *)
@@ -282,20 +341,19 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
       | _ :: _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v []
       | _ :: [] -> eval_step [] ("Panic" :: t) v [])
-   | If :: c1 :: Else :: c2 :: End :: p0 -> 
+   | If (c1, c2) :: p0 -> 
       (match s with 
       | Bool b :: s0 -> 
          if b = true then 
-            eval_step (c1 :: s0) t v p0
+            eval_step s0 t v (c1 @ p0)
          else 
-            eval_step (c2 :: s0) t v p0
+            eval_step s0 t v (c2 @ p0)
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Bind :: p0 -> 
       (match s with 
       | Sym x :: v0 :: s0 -> 
-         let x = v0 in 
-         eval_step s0 t (x :: v) p0 
+         eval_step s0 t ((str_of_sym x, v0) :: v) p0 
       | _ :: v0 :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
@@ -307,11 +365,11 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
          | _ :: v0 -> eval_step [] ("Panic" :: t) v [])
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
-   | Fun :: c :: End :: p0 ->
+   | Fun c :: p0 ->
       (match s with 
       | Sym x :: s0 -> 
          let closure = {name = x; capt_env = v; body = c} in 
-         eval_step (closure :: s0) t v p0
+         eval_step (closure :: s0) t capt_env p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
