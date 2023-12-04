@@ -61,11 +61,7 @@ type value =
 
 and venv = (string * value) list
 
-and closure = {
-   name: sym;
-   capt_env: venv;
-   body: coms;
-}
+and closure = sym * venv * coms
 
 type stack = value list 
 
@@ -331,25 +327,20 @@ let rec eval_step(s: stack)(t: trace)(v: venv)(p: prog): trace =
    | Fun c :: p0 ->
       (match s with 
       | Const (Sym x) :: s0 -> 
-         let f = {name = x; capt_env = v; body = c} in 
-         eval_step (Closure f :: s0) t v p0
+         eval_step (Closure (x, v, c) :: s0) t v p0
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
    | Call :: p0 -> 
       (match s with
-      | Const (Sym f) :: a :: s0 ->
-        let closure = fetch (str_of_sym f) v in 
-        eval_step (a :: Const (Sym f) :: s0) t ((str_of_sym f, closure) :: v) p0
+      | Closure (f, vf, c) :: a :: s0 ->
+         eval_step (a :: Closure (f, v, p0) :: s0) t ((str_of_sym f, Closure (f, vf, c)) :: vf) c
       | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
       | _ :: s0 -> eval_step [] ("Panic" :: t) v []
       | [] -> eval_step [] ("Panic" :: t) v [])
     | Return :: p0 -> 
         (match s with 
-        | Const (Sym f) :: a :: s0 ->
-            (match fetch (str_of_sym f) v with
-            | Closure closure ->
-                eval_step (a :: s0) t closure.capt_env closure.body
-            | _ -> eval_step [] ("Panic" :: t) v [])
+        | Closure (f, vf, c) :: a :: s0 ->
+         eval_step (a :: s0) t vf c
         | _ :: a :: s0 -> eval_step [] ("Panic" :: t) v []
         | _ :: s0 -> eval_step [] ("Panic" :: t) v []
         | [] -> eval_step [] ("Panic" :: t) v [])
