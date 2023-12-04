@@ -36,6 +36,7 @@ grammar: programs
 
 type sym = 
    | Char of char 
+   | CDig of sym * char
 
 type const =
    | Int of int
@@ -86,13 +87,17 @@ let str_of_int(n: int): string =
    else 
       str_of_nat n
 
+let str_of_sym(c): string =
+   match c with 
+   | Char c -> str c
+
 let toString(c: const): string =
    match c with 
    | Int i -> str_of_int i
    | Bool true -> "True"
    | Bool false -> "False"
    | Unit -> "Unit"
-   | Sym x -> "x"
+   | Sym x -> str_of_sym x
 
 let is_lower_case c =
    'a' <= c && c <= 'z'
@@ -134,23 +139,29 @@ let char_parser =
 let digit_parser = 
    satisfy is_digit
 
-let sym_parser =
+let rec sym_parser_helper () =
    (let* c = char_parser in 
-      pure (Sym (Char c)))
+      pure (Char c))
+   <|>
+   (let* c = char_parser in 
+      let* s = sym_parser_helper () in 
+      pure (CDig (s, c)))
    <|>
    (let* d = digit_parser in 
-      pure (Sym (Char d)))
+      let* s = sym_parser_helper () in 
+      pure (CDig (s, d)))
 
 let const_parser =
-  int_parser
-  <|>
-  bool_parser
-  <|>
-  unit_parser
-  <|>
-  sym_parser
+   int_parser
+   <|>
+   bool_parser
+   <|>
+   unit_parser
+   <|>
+   (sym_parser_helper () >>= fun s ->
+      pure (Sym s))
 
-let rec com_parser =
+let com_parser =
    (keyword "Push" >> const_parser >>= fun c ->
       pure (Push c))
    <|>
@@ -178,17 +189,22 @@ let rec com_parser =
    <|>
    (keyword "Gt" >> pure Gt)
    <|>
-   (keyword "If" >> com_parser >>= fun c ->
-      pure (If c))
+   (keyword "If" >> coms_parser >>= fun c1 ->
+      keyword "Else" >> coms_parser >>= fun c2 ->
+      keyword "End" >> pure (If (c1, c2)))
    <|> 
    (keyword "Bind" >> pure Bind)
    <|>
    (keyword "Lookup" >> pure Lookup)
    <|>
-   (keyword "Fun" >> com_parser >>= fun c ->
-      pure (Fun c))
+   (keyword "Fun" >> coms_parser >>= fun c ->
+      keyword "End" >> pure (Fun c))
+   <|>
+   (keyword "Call" >> pure Call)
+   <|>
+   (keyword "Return" >> pure Return)
 
-and coms_parser: coms parser =   
+and coms_parser =   
    many (com_parser << keyword ";")
 
 
