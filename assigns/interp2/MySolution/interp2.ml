@@ -366,8 +366,6 @@ let interp (s: string): string list option =
 
 (* READ FILE FUNCTIONS *)
 
-(* interp from file *)
-
 let read_file (fname: string): string =
    let fp = open_in fname in
    let s = string_make_fwork (fun work ->
