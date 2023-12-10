@@ -372,74 +372,87 @@ type value =
   | VFun of string * string * expr
 *)
 
-let negate (s: string): string =
-  "-" ^ s
+let rec str_of_nat (n: int): string =
+  let d = n mod 10 in 
+  let n0 = n / 10 in
+  let s = str (chr (d + ord '0')) in 
+  if 0 < n0 then
+    string_append (str_of_nat n0) s
+  else s
 
+let str_of_int (n: int): string = 
+  if n < 0 then
+    string_append "-" (str_of_nat (-n))
+  else str_of_nat n
+
+let str_of_bool (b: bool): string = 
+  if b = true then 
+    "True"
+  else 
+    "False"
+(*
+let toString (e: expr): string = 
+  match e with 
+  | Int i -> str_of_int 
+  | Bool b -> str_of_bool
+  | Unit -> "Unit"
+  | Fun (s, e1, e2) -> "Fun<" ^ s ^ ">"
+*)
 (******************************)
 
 
 let rec translate(e: expr): string =
   match e with
-  | Int i -> "Push (Int " ^ string_of_int i ^ ")"
-  | Bool b -> 
-    if b then 
-      "Push (Bool True)"
-    else
-      "Push (Bool False)"
+  | Int i -> "Push (Int " ^ str_of_int i ^ ")"
+  | Bool b -> "Push (Bool " ^ str_of_bool b ^ ")"
   | Unit -> "Push Unit"
 
-  | UOpr (Neg, e1) -> "Push (" ^ negate (translate e1) ^ ")"
+  | UOpr (Neg, Int i) -> "Push (Int -" ^ string_of_int i ^ ")"
+  | UOpr (Neg, e1) -> "Push (" ^ translate e1 ^ ")"
 
   | UOpr (Not, e1) -> "Push (" ^ translate e1 ^ "); Not"
 
-  | BOpr (Add, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Add" 
+  | BOpr (Add, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Add" 
   
-  | BOpr (Sub, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Sub" 
+  | BOpr (Sub, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Switch; Sub" 
   
-  | BOpr (Mul, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Mul" 
+  | BOpr (Mul, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Mul" 
   
-  | BOpr (Div, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Div" 
+  | BOpr (Div, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Switch; Div" 
   
-  | BOpr (Mod, e1, e2) -> 
-    "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Div; Mul; Sub" 
+  | BOpr (Mod, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Switch; Div; Mul; Sub" 
 
-  | BOpr (And, e1, e2) -> "Push (Bool " ^ translate e1 ^ "); Push (Bool " ^ translate e2 ^ "); And" 
+  | BOpr (And, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; And" 
 
-  | BOpr (Or, e1, e2) -> "Push (Bool " ^ translate e1 ^ "); Push (Bool " ^ translate e2 ^ "); Or" 
+  | BOpr (Or, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Or" 
 
-  | BOpr (Lt, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Lt"
+  | BOpr (Lt, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Switch; Lt"
 
-  | BOpr (Gt, e1, e2) -> "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Gt"
+  | BOpr (Gt, e1, e2) -> translate e1 ^ "; " ^ translate e2 ^ "; Switch; Gt"
 
   | BOpr (Lte, e1, e2) -> 
-    "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Lt; Gt; Not; And"
+    translate e1 ^ "; " ^ translate e2 ^ "; Switch; Lt; " ^ translate e1 ^ "; " ^ translate e2 ^ " Switch; Gt; Not; And"
   
   | BOpr (Gte, e1, e2) ->
-    "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Gt; Lt; Not; And"
+    translate e1 ^ "; " ^ translate e2 ^ "; Switch; Gt; " ^ translate e1 ^ "; " ^ translate e2 ^ " Switch; Lt; Not; And"
   
   | BOpr (Eq, e1, e2) -> 
-    "Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Lt; Not; Gt; Not; And"
+    translate e1 ^ "; " ^ translate e2 ^ "; Switch Lt; Not; " ^ translate e1 ^ "; " ^ translate e2 ^ " Switch; Gt; Not; And"
 
-  | Var s1 -> "Push " ^ s1
+  | Var s1 -> s1
 
-  | Fun (s1, s2, e1) -> 
-    "Push " ^ s1 ^ "; Fun " ^ "Push " ^ s2 ^ "; Bind; " ^ translate e1 ^ "; End"
+  | Fun (s1, s2, e1) -> s1 ^ "; Fun " ^ s2 ^ "; Bind; " ^ translate e1 ^ "; End"
   
-  | App (e1, e2) -> "" ^ translate e1 ^ translate e2 ^ "; Call"
+  | App (e1, e2) -> translate e1 ^ translate e2 ^ "; Call"
 
-  | Let (s1, e1, e2) -> 
-    "Push " ^ s1 ^ "; " ^ translate e1 ^ "; Bind; " ^ translate e2
+  | Let (s1, e1, e2) -> s1 ^ "; " ^ translate e1 ^ "; Bind; " ^ translate e2
 
-  | Seq (e1, e2) -> "" ^ translate e1 ^ "; " ^ translate e2
+  | Seq (e1, e2) -> translate e1 ^ "; " ^ translate e2
 
-  | Ifte (e1, e2, e3) -> 
-    "If " ^ translate e1 ^ "; Then " ^ translate e2 ^ "; Else " ^ translate e3
+  | Ifte (e1, e2, e3) -> "If " ^ translate e1 ^ "; Then " ^ translate e2 ^ "; Else " ^ translate e3
 
-  | Trace e1 -> "" ^ translate e1 ^ "; Trace"
+  | Trace e1 -> translate e1 ^ "; Trace"
 
-
-
-  
 
 let compile(s: string): string = 
   translate (parse_prog s)
