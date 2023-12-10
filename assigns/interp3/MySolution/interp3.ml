@@ -401,17 +401,17 @@ let rec translate(e: expr): string =
 
   | BOpr (Or, e1, e2) -> "[Push (Bool " ^ translate e1 ^ "); Push (Bool " ^ translate e2 ^ "); Or]" 
 
-  | Bopr (Lt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt]"
+  | BOpr (Lt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt]"
 
-  | Bopr (Gt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Gt]"
+  | BOpr (Gt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Gt]"
 
-  | Bopr (Lte, e1, e2) -> 
+  | BOpr (Lte, e1, e2) -> 
     "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt; Gt; Not; And]"
   
-  | Bopr (Gte, e1, e2) ->
+  | BOpr (Gte, e1, e2) ->
     "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Gt; Lt; Not; And]"
   
-  | Bopr (Eq, e1, e2) -> 
+  | BOpr (Eq, e1, e2) -> 
     "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt; Not; Gt; Not; And]"
 
   | Var s1 -> s1
@@ -422,7 +422,7 @@ let rec translate(e: expr): string =
   | App (e1, e2) -> "[" ^ translate e1 ^ translate e2 ^ "; Call]"
 
   | Let (s1, e1, e2) -> 
-    "[Push " ^ s1 ^ "; " ^ translate e1 ^ Bind; " ^ translate e2 ^ "]"
+    "[Push " ^ s1 ^ "; " ^ translate e1 ^ "Bind; " ^ translate e2 ^ "]"
 
   | Seq (e1, e2) -> "[" ^ translate e1 ^ "; " ^ translate e2 ^ "]"
 
