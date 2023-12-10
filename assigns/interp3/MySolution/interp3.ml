@@ -416,7 +416,8 @@ let rec translate(e: expr): string =
 
   | Var s1 -> s1
 
-  | Fun (s1, s2, e1) -> "[Fun (" ^ s1 ^ s2 ^ translate e1 ^ "; End)]"
+  | Fun (s1, s2, e1) -> 
+    "[Push " ^ s1 ^ "; Fun " ^ "Push " ^ s2 ^ "; Bind; " ^ translate e1 ^ "; End]"
   
   | App (e1, e2) -> "[" ^ translate e1 ^ translate e2 ^ "; Call]"
 
