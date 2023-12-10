@@ -414,7 +414,7 @@ let rec translate(e: expr): string =
   | BOpr (Eq, e1, e2) -> 
     "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt; Not; Gt; Not; And]"
 
-  | Var s1 -> s1
+  | Var s1 -> "[Push " ^ s1 ^ "]"
 
   | Fun (s1, s2, e1) -> 
     "[Push " ^ s1 ^ "; Fun " ^ "Push " ^ s2 ^ "; Bind; " ^ translate e1 ^ "; End]"
@@ -422,7 +422,7 @@ let rec translate(e: expr): string =
   | App (e1, e2) -> "[" ^ translate e1 ^ translate e2 ^ "; Call]"
 
   | Let (s1, e1, e2) -> 
-    "[Push " ^ s1 ^ "; " ^ translate e1 ^ "Bind; " ^ translate e2 ^ "]"
+    "[Push " ^ s1 ^ "; Push " ^ translate e1 ^ "; Bind; " ^ translate e2 ^ "]"
 
   | Seq (e1, e2) -> "[" ^ translate e1 ^ "; " ^ translate e2 ^ "]"
 
@@ -434,3 +434,21 @@ let rec translate(e: expr): string =
 
 let compile(s: string): string = 
   translate (parse_prog s)
+
+
+(* READ FILE FUNCTIONS *)
+
+let read_file (fname: string): string =
+   let fp = open_in fname in
+   let s = string_make_fwork (fun work ->
+      try
+         while true do
+            work (input_char fp)
+         done
+      with _ -> ())
+   in
+   close_in fp; s
+
+let comp_file (fname: string) =
+   let src = read_file fname in
+   compile src
