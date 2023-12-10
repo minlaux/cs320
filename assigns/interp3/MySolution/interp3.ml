@@ -328,4 +328,108 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-let compile (s : string) : string = (* YOUR CODE *)
+
+(******************************)
+
+
+(* GRAMMAR *)
+
+(* 
+⟨digit⟩ ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+⟨nat⟩ ::= ⟨digit⟩ | ⟨digit⟩⟨nat⟩
+⟨int⟩ ::= ⟨nat⟩ | -⟨nat⟩
+⟨bool⟩ ::= true | false
+⟨unit⟩ ::= ()
+⟨unop⟩ ::= - | not
+⟨binop⟩ ::= + | - | * | / | mod | && | || | < | > | <= | >= | =
+⟨char⟩ ::= a | b | .. | z
+⟨var⟩ ::= ⟨char⟩ | ⟨var⟩⟨char⟩ | ⟨var⟩⟨digit⟩
+⟨expr⟩ ::= ⟨int⟩ | ⟨bool⟩ | ⟨unit⟩
+        | ⟨unop⟩ ⟨expr⟩
+        | ⟨expr⟩ ⟨binop⟩ ⟨expr⟩
+        | ⟨var⟩
+        | fun ⟨var⟩ ⟨var⟩ -> ⟨expr⟩
+        | ⟨expr⟩ ⟨expr⟩
+        | let ⟨var⟩ = ⟨expr⟩ in ⟨expr⟩
+        | ⟨expr⟩ ; ⟨expr⟩
+        | if ⟨expr⟩ then ⟨expr⟩ else ⟨expr⟩
+        | trace ⟨expr⟩
+*)
+
+
+(* TYPE DEFINITIONS *)
+(*
+type trace = string list
+
+type state = 
+  | Expr of expr 
+  | Error
+
+type value = 
+  | VInt of int 
+  | VBool of bool
+  | Unit
+  | VFun of string * string * expr
+*)
+
+
+(******************************)
+
+
+let rec translate(e: expr): string =
+  match e with
+  | Int i -> "[Push (Int " ^ string_of_int i ^ ")]"
+  | Bool b -> "[Push (Bool " ^ (if b then "True" else "False") ^ ")]"
+  | Unit -> "[Push Unit]"
+
+  | UOpr (Neg, e1) -> "[Push (Int -" ^ (translate e1) ^ ")]"
+
+  | UOpr (Not, e1) -> "[Push (" ^ translate e1 ^ "); Not]"
+
+  | BOpr (Add, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Add]" 
+  
+  | BOpr (Sub, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Sub]" 
+  
+  | BOpr (Mul, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Mul]" 
+  
+  | BOpr (Div, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Div]" 
+  
+  | BOpr (Mod, e1, e2) -> 
+    "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Div; Mul; Sub]" 
+
+  | BOpr (And, e1, e2) -> "[Push (Bool " ^ translate e1 ^ "); Push (Bool " ^ translate e2 ^ "); And]" 
+
+  | BOpr (Or, e1, e2) -> "[Push (Bool " ^ translate e1 ^ "); Push (Bool " ^ translate e2 ^ "); Or]" 
+
+  | Bopr (Lt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt]"
+
+  | Bopr (Gt, e1, e2) -> "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Gt]"
+
+  | Bopr (Lte, e1, e2) -> 
+    "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt; Gt; Not; And]"
+  
+  | Bopr (Gte, e1, e2) ->
+    "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Gt; Lt; Not; And]"
+  
+  | Bopr (Eq, e1, e2) -> 
+    "[Push (Int " ^ translate e1 ^ "); Push (Int " ^ translate e2 ^ "); Swap; Lt; Not; Gt; Not; And]"
+
+  | Var s1 -> s1
+
+  | Fun (s1, s2, e1) -> "[Fun (" ^ s1 ^ s2 ^ translate e1 ^ "; End)]"
+  
+  | App (e1, e2) -> "[" ^ translate e1 ^ translate e2 ^ "; Call]"
+
+  | Let (s1, e1, e2) -> 
+    "[Push " ^ s1 ^ "; " ^ translate e1 ^ Bind; " ^ translate e2 ^ "]"
+
+  | Seq (e1, e2) -> "[" ^ translate e1 ^ "; " ^ translate e2 ^ "]"
+
+  | Ifte (e1, e2, e3) -> 
+    "[If " ^ translate e1 ^ "; Then " ^ translate e2 ^ "; Else " ^ translate e3 ^ "]"
+
+  | Trace e1 -> "[" ^ translate e1 ^ "; Trace]"
+  
+
+let compile(s: string): string = 
+  translate (parse_prog s)
