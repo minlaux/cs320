@@ -470,7 +470,7 @@ let rec translate (s: scope) (e: expr): string =
 
 
 let compile(s: string): string = 
-  translate [] (parse_prog s)
+  translate [] (scope_expr (parse_prog s))
 
 
 
