@@ -402,64 +402,63 @@ let toString (e: expr): string =
 
 let rec translate(e: expr): string =
   match e with
-  | Int i -> string_concat_list ["Push (Int "; string_of_int i; ");"]
-  | Bool b -> string_concat_list ["Push (Bool "; string_of_bool b; ");"]
-  | Unit -> "Push Unit;"
+  | Int i -> string_concat_list ["Push (Int "; string_of_int i; "); "]
+  | Bool b -> string_concat_list ["Push (Bool "; string_of_bool b; "); "]
+  | Unit -> "Push Unit; "
 
-  | UOpr (Neg, e1) -> string_append (translate e1) " Push (Int -1); Mul;"
-  | UOpr (Not, e1) -> string_append (translate e1) " Not;"
+  | UOpr (Neg, e1) -> string_append (translate e1) " Push (Int -1); Mul; "
+  | UOpr (Not, e1) -> string_append (translate e1) " Not; "
 
-  | BOpr (Add, e1, e2) -> string_concat_list [translate e1; translate e2; " Add;"]
+  | BOpr (Add, e1, e2) -> string_concat_list [translate e1; translate e2; " Add; "]
   | BOpr (Add, _, _) -> "Error"
 
-  | BOpr (Sub, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Sub;"]
+  | BOpr (Sub, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Sub; "]
   | BOpr (Sub, _, _) -> "Error"
   
-  | BOpr (Mul, e1, e2) -> string_concat_list [translate e1; translate e2; " Mul;"]  
+  | BOpr (Mul, e1, e2) -> string_concat_list [translate e1; translate e2; " Mul; "]  
   | BOpr (Mul, _, _) -> "Error"
   
   | BOpr (Div, Int i1, Int 0) -> "Error"
-
-  | BOpr (Div, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Div;"]
+  | BOpr (Div, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Div; "]
   | BOpr (Div, _, _) -> "Error"
   
   | BOpr (Mod, e1, Int 0) -> "Error"
   | BOpr (Mod, e1, e2) -> 
-  string_concat_list [translate e1; translate e2; " Switch; Div; "; translate e2; " Mul; "; translate e1; " Sub;"]
+  string_concat_list [translate e1; translate e2; " Switch; Div; "; translate e2; " Mul; "; translate e1; " Sub; "]
   | BOpr (Mod, _, _) -> "Error"
 
-  | BOpr (And, e1, e2) -> string_concat_list [translate e1; translate e2; " And;"]
+  | BOpr (And, e1, e2) -> string_concat_list [translate e1; translate e2; " And; "]
   | BOpr (And, _, _) -> "Error"
 
-  | BOpr (Or, e1, e2) -> string_concat_list [translate e1; translate e2; " And;"]
+  | BOpr (Or, e1, e2) -> string_concat_list [translate e1; translate e2; " And; "]
   | BOpr (Or, _, _) -> "Error"
  
-  | BOpr (Lt, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Lt;"]
+  | BOpr (Lt, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Lt; "]
   | BOpr (Lt, _, _) -> "Error"
 
-  | BOpr (Gt, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Gt;"]
+  | BOpr (Gt, e1, e2) -> string_concat_list [translate e1; translate e2; " Switch; Gt; "]
   | BOpr (Gt, _, _) -> "Error"
 
   | BOpr (Lte, e1, e2) -> 
-  string_concat_list [translate e1; translate e2; " Switch; Lt; "; translate e1; translate e2; " Switch; Gt; Not; And;"] 
+  string_concat_list [translate e1; translate e2; " Switch; Lt; "; translate e1; translate e2; " Switch; Gt; Not; And; "] 
   | BOpr (Lte, _, _) -> "Error"
   
   | BOpr (Gte, e1, e2) -> 
-  string_concat_list [translate e1; translate e2; " Switch; Gt; "; translate e1; translate e2; " Switch; Lt; Not; And;"]  
+  string_concat_list [translate e1; translate e2; " Switch; Gt; "; translate e1; translate e2; " Switch; Lt; Not; And; "]  
   | BOpr (Gte, _, _) -> "Error"
   
   | BOpr (Eq, e1, e2) -> 
-  string_concat_list [translate e1; translate e2; " Switch; Lt; Not; "; translate e1; translate e2; " Gt; Not; And;"]
+  string_concat_list [translate e1; translate e2; " Switch; Lt; Not; "; translate e1; translate e2; " Gt; Not; And; "]
   | BOpr (Eq, _, _) -> "Error"
 
-  | Var s1 -> string_concat_list ["Push "; s1; "; Lookup;"]
+  | Var s1 -> string_concat_list ["Push "; s1; "; Lookup; "]
 
-  | Fun (s1, s2, e1) -> string_concat_list ["Push "; s1; "; Fun Push "; s2; "; Bind; "; translate e1; " End;"]
+  | Fun (s1, s2, e1) -> string_concat_list ["Push "; s1; "; Fun Push "; s2; "; Bind; "; translate e1; " End; "]
 
-  | Let (s1, e1, e2) -> string_concat_list ["Push "; s1; "; "; translate e1; " Bind; "; translate e2]
+  | Let (s1, e1, e2) -> string_concat_list [translate e1; "Push "; s1; "; Bind; "; translate e2]
   | Let (s1, _, _) -> "Error"
 
-  | App (f1, v1) -> string_concat_list [translate f1; translate v1; " Bind; "; translate v1; " Lookup; Call;"]
+  | App (f1, v1) -> string_concat_list [translate f1; translate v1; " Bind; "; translate v1; " Lookup; Call; "]
   | App (_, _) -> "Error"
 
   | Seq (e1, e2) -> string_concat_list [translate e1; translate e2]
@@ -468,7 +467,7 @@ let rec translate(e: expr): string =
   | Ifte (e1, n1, n2) -> string_concat_list ["If "; translate e1; "Then "; translate n1; "Else "; translate n2]
   | Ifte (_, n1, n2) -> "Error"
 
-  | Trace e1 -> string_concat_list [translate e1; " Trace;"]
+  | Trace e1 -> string_concat_list [translate e1; " Trace; "]
   | Trace _ -> "Error"
 
 
