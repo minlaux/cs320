@@ -403,42 +403,28 @@ let rec translate (s: scope) (e: expr): string =
   | UOpr (Not, e1) -> string_append (translate s e1) "Not; "
 
   | BOpr (Add, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Add; "]
-  | BOpr (Add, _, _) -> "Error"
 
   | BOpr (Sub, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Sub; "]
-  | BOpr (Sub, _, _) -> "Error"
   
   | BOpr (Mul, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Mul; "]  
-  | BOpr (Mul, _, _) -> "Error"
   
-  | BOpr (Div, Int i1, Int 0) -> "Error"
   | BOpr (Div, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Div; "]
-  | BOpr (Div, _, _) -> "Error"
   
-  | BOpr (Mod, e1, Int 0) -> "Error"
   | BOpr (Mod, e1, e2) -> translate_mod s e1 e2
-  | BOpr (Mod, _, _) -> "Error"
 
   | BOpr (And, e1, e2) -> string_concat_list [translate s e1; translate s e2; "And; "]
-  | BOpr (And, _, _) -> "Error"
 
   | BOpr (Or, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Or; "]
-  | BOpr (Or, _, _) -> "Error"
  
   | BOpr (Lt, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Lt; "]
-  | BOpr (Lt, _, _) -> "Error"
 
   | BOpr (Gt, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Gt; "]
-  | BOpr (Gt, _, _) -> "Error"
 
   | BOpr (Lte, e1, e2) -> string_concat_list [translate s (BOpr (Gt, e1, e2)); "Not; "] 
-  | BOpr (Lte, _, _) -> "Error"
   
   | BOpr (Gte, e1, e2) -> string_concat_list [translate s (BOpr (Lt, e1, e2)); "Not; "] 
-  | BOpr (Gte, _, _) -> "Error"
   
   | BOpr (Eq, e1, e2) -> translate_eq s e1 e2
-  | BOpr (Eq, _, _) -> "Error"
 
   | Var x -> 
     (match find_var s x with 
@@ -448,20 +434,15 @@ let rec translate (s: scope) (e: expr): string =
   | Fun (f, x, m) -> translate_fun s f x m 
 
   | Let (x, v, m) -> translate_let s x v m
-  | Let (x, _, _) -> "Error"
 
   | App (e1, e2) -> string_concat_list [translate s e1; translate s e2; "Call; "]
-  | App (_, _) -> "Error"
 
   | Seq (e1, e2) -> string_concat_list [translate s e1; "Pop; "; translate s e2]
-  | Seq (_, _) -> "Error"
 
   | Ifte (e1, n1, n2) -> 
   string_concat_list ["If "; translate s e1; "Then "; translate s n1; "Else "; translate s n2; "End; "]
-  | Ifte (_, n1, n2) -> "Error"
 
   | Trace e1 -> string_append (translate s e1) "Trace; "
-  | Trace _ -> "Error"
 
 and translate_mod (s: scope) (e1: expr) (e2: expr) =
   let ev1 = translate s e1 in 
@@ -490,11 +471,8 @@ and translate_let (s: scope) x m n =
   string_concat_list [m1; "Push "; x1; "; Bind; "; n1]
 
 
-
-
 let compile(s: string): string = 
   translate [] (scope_expr (parse_prog s))
-
 
 
 (* READ FILE FUNCTIONS *)
