@@ -375,14 +375,21 @@ let str_of_bool (b: bool): string =
     "True"
   else 
     "False"
+
 (*
-let toString (e: expr): string = 
+let toString (s: scope) (e: expr): string = 
   match e with 
   | Int i -> str_of_int i
   | Bool b -> str_of_bool b
   | Unit -> "Unit"
-  | Fun (s, e1, e2) -> "Fun<" ^ s ^ ">"
+  | Var v -> 
+    (match find_var s v with 
+    | Some v -> v 
+    | None -> raise UnboundVariable v)
+  | Fun (f, _, _) -> string_concat_list ["Fun<"; f; ">"]
+  | _ -> "Error"
 *)
+  
 (******************************)
 
 
@@ -395,13 +402,13 @@ let rec translate (s: scope) (e: expr): string =
   | UOpr (Neg, e1) -> string_append (translate s e1) "Push (Int -1); Mul; "
   | UOpr (Not, e1) -> string_append (translate s e1) "Not; "
 
-  | BOpr (Add, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Add; "]
+  | BOpr (Add, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Add; "]
   | BOpr (Add, _, _) -> "Error"
 
   | BOpr (Sub, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Sub; "]
   | BOpr (Sub, _, _) -> "Error"
   
-  | BOpr (Mul, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Mul; "]  
+  | BOpr (Mul, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Mul; "]  
   | BOpr (Mul, _, _) -> "Error"
   
   | BOpr (Div, Int i1, Int 0) -> "Error"
@@ -409,8 +416,7 @@ let rec translate (s: scope) (e: expr): string =
   | BOpr (Div, _, _) -> "Error"
   
   | BOpr (Mod, e1, Int 0) -> "Error"
-  | BOpr (Mod, e1, e2) -> 
-  string_concat_list [translate s e1; translate s e2; "Swap; Div; "; translate s e2; "Mul; "; translate s e1; "Sub; "]
+  | BOpr (Mod, e1, e2) -> translate_mod s e1 e2
   | BOpr (Mod, _, _) -> "Error"
 
   | BOpr (And, e1, e2) -> string_concat_list [translate s e1; translate s e2; "And; "]
@@ -425,48 +431,65 @@ let rec translate (s: scope) (e: expr): string =
   | BOpr (Gt, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Gt; "]
   | BOpr (Gt, _, _) -> "Error"
 
-  | BOpr (Lte, e1, e2) -> 
-  string_concat_list [translate s e1; translate s e2; "Swap; Lt; "; translate s e1; translate s e2; "Swap; Gt; Not; And; "] 
+  | BOpr (Lte, e1, e2) -> string_concat_list [translate s (BOpr (Gt, e1, e2)); "Not; "] 
   | BOpr (Lte, _, _) -> "Error"
   
-  | BOpr (Gte, e1, e2) -> 
-  string_concat_list [translate s e1; translate s e2; "Swap; Gt; "; translate s e1; translate s e2; "Swap; Lt; Not; And; "]  
+  | BOpr (Gte, e1, e2) -> string_concat_list [translate s (BOpr (Lt, e1, e2)); "Not; "] 
   | BOpr (Gte, _, _) -> "Error"
   
-  | BOpr (Eq, e1, e2) -> 
-  string_concat_list [translate s e1; translate s e2; "Swap; Lt; Not; "; translate s e1; translate s e2; "Gt; Not; And; "]
+  | BOpr (Eq, e1, e2) -> translate_eq s e1 e2
   | BOpr (Eq, _, _) -> "Error"
 
-  | Var s1 -> 
-    (match find_var s s1 with 
-    | Some v -> string_concat_list ["Push "; v; "; Lookup; "]
-    | None -> string_concat_list ["Push "; new_var s1; "; Lookup; "])
+  | Var x -> 
+    (match find_var s x with 
+    | None -> raise (UnboundVariable x)
+    | Some v -> string_concat_list ["Push "; v; "; Lookup; "])
   
-  | Fun (f, x, m) -> 
-    let f_var = new_var f in 
-    let f_scope = (f, f_var) :: s in 
-    let param = new_var x in 
-    let def = (x, param) :: f_scope in
-    string_concat_list ["Push "; f_var; "; Fun Push "; param; "; Bind; "; translate def m; "End; "]
+  | Fun (f, x, m) -> translate_fun s f x m 
 
-  | Let (x, v, m) -> 
-    let var_x = new_var x in 
-    let x_scope = (x, var_x) :: s in 
-    string_concat_list [translate s v; "Push "; var_x; "; Bind; "; translate x_scope m]
+  | Let (x, v, m) -> translate_let s x v m
   | Let (x, _, _) -> "Error"
 
-  | App (f1, v1) -> string_concat_list [translate s f1; translate s v1; " Bind; "; translate s v1; "Lookup; Call; "]
+  | App (e1, e2) -> string_concat_list [translate s e1; translate s e2; "Call; "]
   | App (_, _) -> "Error"
 
-  | Seq (e1, e2) -> string_concat_list [translate s e1; translate s e2]
+  | Seq (e1, e2) -> string_concat_list [translate s e1; "Pop; "; translate s e2]
   | Seq (_, _) -> "Error"
 
   | Ifte (e1, n1, n2) -> 
   string_concat_list ["If "; translate s e1; "Then "; translate s n1; "Else "; translate s n2; "End; "]
   | Ifte (_, n1, n2) -> "Error"
 
-  | Trace e1 -> string_concat_list [translate s e1; "Trace; "]
+  | Trace e1 -> string_append (translate s e1) "Trace; "
   | Trace _ -> "Error"
+
+and translate_mod (s: scope) (e1: expr) (e2: expr) =
+  let ev1 = translate s e1 in 
+  let ev2 = translate s e2 in 
+  let div = translate s (BOpr (Div, e1, e2)) in 
+  string_concat_list [div; ev2; "Mul; "; ev1; "Sub; "]
+
+and translate_eq (s: scope) (e1: expr) (e2: expr): string =
+  let lt = translate s (BOpr (Lt, e1, e2)) in 
+  let gt = translate s (BOpr (Gt, e1, e2)) in 
+  string_concat_list [lt; "Not; "; gt; "Not; And; "]
+
+and translate_fun (s: scope) (f) (x) (m) = 
+  let f_var = new_var f in 
+  let f_scope = (f, f_var) :: s in 
+  let param = new_var x in 
+  let def = (x, param) :: f_scope in
+  let body = translate def m in
+  string_concat_list ["Push "; f_var; "; Fun "; body; "Return; End; "]
+
+and translate_let (s: scope) x m n =
+  let m1 = translate s m in 
+  let x1 = new_var x in 
+  let x_scope = (x, x1) :: s in 
+  let n1 = translate x_scope n in 
+  string_concat_list [m1; "Push "; x1; "; Bind; "; n1]
+
+
 
 
 let compile(s: string): string = 
