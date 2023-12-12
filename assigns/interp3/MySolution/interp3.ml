@@ -440,7 +440,7 @@ let rec translate (s: scope) (e: expr): string =
   | Seq (e1, e2) -> string_concat_list [translate s e1; "Pop; "; translate s e2]
 
   | Ifte (e1, n1, n2) -> 
-  string_concat_list ["If "; translate s e1; "Then "; translate s n1; "Else "; translate s n2; "End; "]
+  string_concat_list [translate s e1; "If "; translate s n1; "Else "; translate s n2; "End; "]
 
   | Trace e1 -> string_append (translate s e1) "Trace; "
 
@@ -470,6 +470,13 @@ and translate_let (s: scope) x m n =
   let n1 = translate x_scope n in 
   string_concat_list [m1; "Push "; x1; "; Bind; "; n1]
 
+(*
+and translate_ifte (s: scope) e n1 n2 =
+  let _if = translate s e in 
+  let _then = translate s n1 in 
+  let _else = translate s n2 in 
+  string_concat_list ["If "; translate s e1; "Then "; translate s n1; "Else "; translate s n2; "End; "]
+*)
 
 let compile(s: string): string = 
   translate [] (scope_expr (parse_prog s))
@@ -477,6 +484,7 @@ let compile(s: string): string =
 
 (* READ FILE FUNCTIONS *)
 
+(*
 let read_file (fname: string): string =
    let fp = open_in fname in
    let s = string_make_fwork (fun work ->
@@ -491,3 +499,4 @@ let read_file (fname: string): string =
 let comp_file (fname: string) =
    let src = read_file fname in
    compile src
+*)
