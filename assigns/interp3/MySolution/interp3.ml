@@ -461,7 +461,7 @@ and translate_fun (s: scope) (f) (x) (m) =
   let param = new_var x in 
   let def = (x, param) :: f_scope in
   let body = translate def m in
-  string_concat_list ["Push "; f_var; "; Fun "; body; "Return; End; "]
+  string_concat_list ["Push "; f_var; "; Fun Push "; param; "; Bind; "; body; "Swap; Return; End; "]
 
 and translate_let (s: scope) x m n =
   let m1 = translate s m in 
