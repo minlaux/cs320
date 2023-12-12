@@ -395,11 +395,11 @@ let toString (s: scope) (e: expr): string =
 
 let rec translate (s: scope) (e: expr): string =
   match e with
-  | Int i -> string_concat_list ["Push (Int "; str_of_int i; "); "]
-  | Bool b -> string_concat_list ["Push (Bool "; str_of_bool b; "); "]
+  | Int i -> string_concat_list ["Push "; str_of_int i; "; "]
+  | Bool b -> string_concat_list ["Push "; str_of_bool b; "; "]
   | Unit -> "Push Unit; "
 
-  | UOpr (Neg, e1) -> string_append (translate s e1) "Push (Int -1); Mul; "
+  | UOpr (Neg, e1) -> string_append (translate s e1) "Push -1; Mul; "
   | UOpr (Not, e1) -> string_append (translate s e1) "Not; "
 
   | BOpr (Add, e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Add; "]
