@@ -435,7 +435,7 @@ let rec translate (s: scope) (e: expr): string =
 
   | Let (x, v, m) -> translate_let s x v m
 
-  | App (e1, e2) -> string_concat_list [translate s e1; translate s e2; "Swap; Call; "]
+  | App (e1, e2) -> string_concat_list [translate s e1; translate s e2; "Call; "]
 
   | Seq (e1, e2) -> string_concat_list [translate s e1; "Pop; "; translate s e2]
 
